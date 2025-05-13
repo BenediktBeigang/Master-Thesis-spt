@@ -106,6 +106,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
 
     # for predictions use trainer.predict(...)
+    # log.info("Starting prediction!")
     # predictions = trainer.predict(model=model, dataloaders=dataloaders, ckpt_path=cfg.ckpt_path)
 
     metric_dict = trainer.callback_metrics

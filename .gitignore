@@ -1,6 +1,9 @@
 # Additional
 .git_origin
 .github
+*.ply
+*.las
+checkpoints/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -35,12 +35,11 @@ __all__ = ['KITTI360', 'MiniKITTI360']
 #                                 Utils                                #
 ########################################################################
 
-def read_kitti360_window(
+def read_synthetic(
         filepath: str,
         xyz: bool = True,
         rgb: bool = True,
         semantic: bool = True,
-        instance: bool = True,
         remap: bool = False
 ) -> Data:
     """Read a KITTI-360 window –i.e. a tile– saved as PLY.
@@ -79,19 +78,19 @@ def read_kitti360_window(
                 for axis in ["red", "green", "blue"]], dim=-1))
 
         if semantic and 'semantic' in attributes:
-            y = torch.LongTensor(window["vertex"]['semantic'])
+            y = torch.LongTensor(window["vertex"]['categoryId'])
             data.y = torch.from_numpy(ID2TRAINID)[y] if remap else y
 
-        if instance and 'instance' in attributes:
-            idx = torch.arange(data.num_points)
-            obj = torch.LongTensor(window["vertex"]['instance'])
-            # is_stuff = obj % 1000 == 0
-            # obj[is_stuff] = 0
-            obj = consecutive_cluster(obj)[0]
-            count = torch.ones_like(obj)
-            y = torch.LongTensor(window["vertex"]['semantic'])
-            y = torch.from_numpy(ID2TRAINID)[y] if remap else y
-            data.obj = InstanceData(idx, obj, count, y, dense=True)
+        # if instance and 'instance' in attributes:
+        #     idx = torch.arange(data.num_points)
+        #     obj = torch.LongTensor(window["vertex"]['instance'])
+        #     # is_stuff = obj % 1000 == 0
+        #     # obj[is_stuff] = 0
+        #     obj = consecutive_cluster(obj)[0]
+        #     count = torch.ones_like(obj)
+        #     y = torch.LongTensor(window["vertex"]['semantic'])
+        #     y = torch.from_numpy(ID2TRAINID)[y] if remap else y
+        #     data.obj = InstanceData(idx, obj, count, y, dense=True)
 
     return data
 
@@ -100,8 +99,8 @@ def read_kitti360_window(
 #                               KITTI360                               #
 ########################################################################
 
-class KITTI360(BaseDataset):
-    """KITTI360 dataset.
+class Synthetic(BaseDataset):
+    """Synthetic dataset.
 
     Dataset website: http://www.cvlibs.net/datasets/kitti-360/
 
@@ -236,7 +235,7 @@ class KITTI360(BaseDataset):
         while `y < 0` AND `y >= self.num_classes` ARE VOID LABELS.
         This applies to both `Data.y` and `Data.obj.y`.
         """
-        return read_kitti360_window(
+        return read_synthetic(
             raw_cloud_path, semantic=True, instance=True, remap=True)
 
     @property
@@ -352,7 +351,7 @@ class KITTI360(BaseDataset):
 #                             MiniKITTI360                             #
 ########################################################################
 
-class MiniKITTI360(KITTI360):
+class MiniKITTI360(Synthetic):
     """A mini version of KITTI360 with only a few windows for
     experimentation.
     """
