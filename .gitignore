@@ -4,6 +4,8 @@
 *.ply
 *.las
 checkpoints/
+pointclouds/
+notebooks/*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
