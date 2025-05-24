@@ -6,7 +6,7 @@ from src.datasets import KITTI360, MiniKITTI360
 log = logging.getLogger(__name__)
 
 
-class KITTI360DataModule(BaseDataModule):
+class SyntheticDataModule(BaseDataModule):
     """LightningDataModule for KITTI360 dataset.
 
     A DataModule implements 5 key methods:
@@ -43,6 +43,6 @@ if __name__ == "__main__":
     import pyrootutils
 
     root = str(pyrootutils.setup_root(__file__, pythonpath=True))
-    cfg = omegaconf.OmegaConf.load(root + "/configs/datamodule/semantic/kitti360.yaml")
+    cfg = omegaconf.OmegaConf.load(root + "/configs/datamodule/semantic/synthetic.yaml")
     cfg.data_dir = root + "/data"
     _ = hydra.utils.instantiate(cfg)

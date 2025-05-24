@@ -12,7 +12,7 @@ from torch_geometric.nn.pool.consecutive import consecutive_cluster
 
 from src.datasets import BaseDataset
 from src.data import Data, InstanceData
-from src.datasets.kitti360_config import *
+from src.datasets.synthetic_config import *
 from src.utils.neighbors import knn_2
 from src.utils.color import to_float_rgb
 
@@ -28,7 +28,7 @@ import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 
-__all__ = ['KITTI360', 'MiniKITTI360']
+__all__ = ['Synthetic']
 
 
 ########################################################################
@@ -40,12 +40,13 @@ def read_synthetic(
         xyz: bool = True,
         rgb: bool = True,
         semantic: bool = True,
+        instance: bool = False,
         remap: bool = False
 ) -> Data:
-    """Read a KITTI-360 window –i.e. a tile– saved as PLY.
+    """Read a synthetic pointcloud –i.e. a tile– saved as las.
 
     :param filepath: str
-        Absolute path to the PLY file
+        Absolute path to the LAS file
     :param xyz: bool
         Whether XYZ coordinates should be saved in the output Data.pos
     :param rgb: bool
@@ -122,11 +123,6 @@ class Synthetic(BaseDataset):
         want to run in CPU-based DataLoaders
     """
 
-    _form_url = CVLIBS_URL
-    _trainval_zip_name = DATA_3D_SEMANTICS_ZIP_NAME
-    _test_zip_name = DATA_3D_SEMANTICS_TEST_ZIP_NAME
-    _unzip_name = UNZIP_NAME
-
     @property
     def class_names(self) -> List[str]:
         """List of string names for dataset classes. This list must be
@@ -143,7 +139,7 @@ class Synthetic(BaseDataset):
         being used for 'void', 'unlabelled', 'ignored' classes,
         indicated as `y=self.num_classes` in the dataset labels.
         """
-        return KITTI360_NUM_CLASSES
+        return SYNTHETIC_NUM_CLASSES
 
     @property
     def stuff_classes(self) -> List[int]:
@@ -182,41 +178,34 @@ class Synthetic(BaseDataset):
         The following structure is expected:
             `{'train': [...], 'val': [...], 'test': [...]}`
         """
-        return WINDOWS
+        return TILES
 
     def download_dataset(self) -> None:
-        """Download the KITTI-360 dataset.
+        """Download the Synthetic dataset.
         """
-        # Name of the downloaded dataset zip
-        zip_name = self._test_zip_name if self.stage == 'test' \
-            else self._trainval_zip_name
+        
+        log.info("The synthetic dataset does not support automatic download. You have to place the dataset by hand.\n")
+        
+        # # Name of the downloaded dataset zip
+        # zip_name = self._test_zip_name if self.stage == 'test' \
+        #     else self._trainval_zip_name
 
-        # Accumulated 3D point clouds with annotations
-        if not osp.exists(osp.join(self.root, zip_name)):
-            if self.stage != 'test':
-                msg = 'Accumulated Point Clouds for Train & Val (12G)'
-            else:
-                msg = 'Accumulated Point Clouds for Test (1.2G)'
-            log.error(
-                f"\nKITTI-360 does not support automatic download.\n"
-                f"Please go to the official webpage {self._form_url}, "
-                f"manually download the '{msg}' (i.e. '{zip_name}') to your "
-                f"'{self.root}/' directory, and re-run.\n"
-                f"The dataset will automatically be unzipped into the "
-                f"following structure:\n"
-                f"{self.raw_file_structure}\n")
-            sys.exit(1)
-
-        # Unzip the file and place its content into the expected data
-        # structure inside `root/raw/` directory
-        extract_zip(osp.join(self.root, zip_name), self.raw_dir)
-        stage = 'test' if self.stage == 'test' else 'train'
-        seqs = os.listdir(osp.join(self.raw_dir, 'data_3d_semantics', stage))
-        for seq in seqs:
-            source = osp.join(self.raw_dir, 'data_3d_semantics', stage, seq)
-            target = osp.join(self.raw_dir, 'data_3d_semantics', seq)
-            shutil.move(source, target)
-        shutil.rmtree(osp.join(self.raw_dir, 'data_3d_semantics', stage))
+        # # Accumulated 3D point clouds with annotations
+        # if not osp.exists(osp.join(self.root, zip_name)):
+        #     if self.stage != 'test':
+        #         msg = 'Accumulated Point Clouds for Train & Val (12G)'
+        #     else:
+        #         msg = 'Accumulated Point Clouds for Test (1.2G)'
+        #     log.error(
+        #         f"\nKITTI-360 does not support automatic download.\n"
+        #         f"Please go to the official webpage {self._form_url}, "
+        #         f"manually download the '{msg}' (i.e. '{zip_name}') to your "
+        #         f"'{self.root}/' directory, and re-run.\n"
+        #         f"The dataset will automatically be unzipped into the "
+        #         f"following structure:\n"
+        #         f"{self.raw_file_structure}\n")
+        #     sys.exit(1)
+        
 
     def read_single_raw_cloud(self, raw_cloud_path: str) -> 'Data':
         """Read a single raw cloud and return a `Data` object, ready to
@@ -236,141 +225,50 @@ class Synthetic(BaseDataset):
         This applies to both `Data.y` and `Data.obj.y`.
         """
         return read_synthetic(
-            raw_cloud_path, semantic=True, instance=True, remap=True)
+            raw_cloud_path, semantic=True, instance=False, remap=True)
 
     @property
     def raw_file_structure(self) -> str:
         return f"""
     {self.root}/
         └── raw/
-            └── data_3d_semantics/
-                └── 2013_05_28_drive_{{seq:0>4}}_sync/
-                    └── static/
-                        └── {{start_frame:0>10}}_{{end_frame:0>10}}.ply
+            └── {{train, val, test}}/
+                └── seed_{{seq:0>4}}
+                    └── tile_{{tile:0>4}}.las
             """
 
     def id_to_relative_raw_path(self, id: str) -> str:
         """Given a cloud id as stored in `self.cloud_ids`, return the
         path (relative to `self.raw_dir`) of the corresponding raw
         cloud.
-        """
-        id = self.id_to_base_id(id)
-        return osp.join(
-            'data_3d_semantics', id.split(os.sep)[0], 'static',
-            id.split(os.sep)[1] + '.ply')
+        """        
+        if id in self.all_cloud_ids['train']:
+            stage = 'train'
+        elif id in self.all_cloud_ids['val']:
+            stage = 'train'
+        elif id in self.all_cloud_ids['test']:
+            stage = 'test'
+        else:
+            raise ValueError(f"Unknown tile id '{id}'")
+        return osp.join(stage, self.id_to_base_id(id) + '.las')
 
     def processed_to_raw_path(self, processed_path: str) -> str:
         """Return the raw cloud path corresponding to the input
         processed path.
         """
         # Extract useful information from <path>
-        stage, hash_dir, sequence_name, cloud_id = \
+        stage, hash_dir, seed_id, cloud_id = \
             osp.splitext(processed_path)[0].split(os.sep)[-4:]
+
+        # Raw 'val' and 'trainval' tiles are all located in the
+        # 'raw/train/' directory
+        stage = 'train' if stage in ['trainval', 'val'] else stage
 
         # Remove the tiling in the cloud_id, if any
         base_cloud_id = self.id_to_base_id(cloud_id)
 
         # Read the raw cloud data
-        raw_path = osp.join(
-            self.raw_dir, 'data_3d_semantics', sequence_name, 'static',
-            base_cloud_id + '.ply')
+        raw_path = osp.join(self.raw_dir, stage, seed_id, base_cloud_id + '.las')
 
         return raw_path
 
-    def make_submission(
-            self,
-            idx: int,
-            pred: torch.Tensor,
-            pos: torch.Tensor,
-            submission_dir: str = None
-    ) -> None:
-        """Prepare data for a sumbission to KITTI360 for 3D semantic
-        Segmentation on the test set.
-
-        Expected submission format is detailed here:
-        https://github.com/autonomousvision/kitti360Scripts/tree/master/kitti360scripts/evaluation/semantic_3d
-        """
-        if self.xy_tiling or self.pc_tiling:
-            raise NotImplementedError(
-                f"Submission generation not implemented for tiled KITTI360 "
-                f"datasets yet...")
-
-        # Make sure the prediction is a 1D tensor
-        if pred.dim() != 1:
-            raise ValueError(
-                f'The submission predictions must be 1D tensors, '
-                f'received {type(pred)} of shape {pred.shape} instead.')
-
-        # TODO:
-        #  - handle tiling
-        #  - handle geometric transformations of test data, shuffling of points and of tiles in the dataloader
-        #  - handle multiple tiles in the dataloader...
-        # Initialize the submission directory
-        submission_dir = submission_dir or self.submission_dir
-        if not osp.exists(submission_dir):
-            os.makedirs(submission_dir)
-
-        # Read the raw point cloud
-        raw_path = osp.join(
-            self.raw_dir, self.id_to_relative_raw_path(self.cloud_ids[idx]))
-        data_raw = self.sanitized_read_single_raw_cloud(raw_path)
-
-        # Search the nearest neighbor of each point and apply the
-        # neighbor's class to the points
-        neighbors = knn_2(pos, data_raw.pos, 1, r_max=1)[0]
-        pred_raw = pred[neighbors]
-
-        # Map TrainId labels to expected Ids
-        pred_raw = np.asarray(pred_raw)
-        pred_remapped = TRAINID2ID[pred_raw].astype(np.uint8)
-
-        # Recover sequence and window information from stage dataset's
-        # windows and format those to match the expected file name:
-        # {seq:0>4}_{start_frame:0>10}_{end_frame:0>10}.npy
-        sequence_name, window_name = self.id_to_base_id(
-            self.cloud_ids[idx]).split(os.sep)
-        seq = sequence_name.split('_')[-2]
-        start_frame, end_frame = window_name.split('_')
-        filename = f'{seq:0>4}_{start_frame:0>10}_{end_frame:0>10}.npy'
-
-        # Save the window submission
-        np.save(osp.join(submission_dir, filename), pred_remapped)
-
-    def finalize_submission(self, submission_dir: str) -> None:
-        """This should be called once all window submission files have
-        been saved using `self._make_submission`. This will zip them
-        together as expected by the KITTI360 submission server.
-        """
-        zipObj = ZipFile(f'{submission_dir}.zip', 'w')
-        for p in glob.glob(osp.join(submission_dir, '*.npy')):
-            zipObj.write(p)
-        zipObj.close()
-
-
-########################################################################
-#                             MiniKITTI360                             #
-########################################################################
-
-class MiniKITTI360(Synthetic):
-    """A mini version of KITTI360 with only a few windows for
-    experimentation.
-    """
-    _NUM_MINI = 2
-
-    @property
-    def all_cloud_ids(self) -> List[str]:
-        return {k: v[:self._NUM_MINI] for k, v in super().all_cloud_ids.items()}
-
-    @property
-    def data_subdir_name(self) -> str:
-        return self.__class__.__bases__[0].__name__.lower()
-
-    # We have to include this method, otherwise the parent class skips
-    # processing
-    def process(self) -> None:
-        super().process()
-
-    # We have to include this method, otherwise the parent class skips
-    # processing
-    def download(self) -> None:
-        super().download()
