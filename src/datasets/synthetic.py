@@ -79,7 +79,7 @@ def read_synthetic(
                 for axis in ["red", "green", "blue"]], dim=-1))
 
         if semantic and 'semantic' in attributes:
-            y = torch.LongTensor(window["vertex"]['categoryId'])
+            y = torch.LongTensor(window["vertex"]['PointSourceId'])
             data.y = torch.from_numpy(ID2TRAINID)[y] if remap else y
 
         # if instance and 'instance' in attributes:
