@@ -1,6 +1,7 @@
 import logging
 from src.datamodules.base import BaseDataModule
 from src.datasets import KITTI360, MiniKITTI360
+from src.datasets import Synthetic
 
 
 log = logging.getLogger(__name__)
@@ -33,8 +34,7 @@ class SyntheticDataModule(BaseDataModule):
     Read the docs:
         https://pytorch-lightning.readthedocs.io/en/latest/data/datamodule.html
     """
-    _DATASET_CLASS = KITTI360
-    _MINIDATASET_CLASS = MiniKITTI360
+    _DATASET_CLASS = Synthetic
 
 
 if __name__ == "__main__":

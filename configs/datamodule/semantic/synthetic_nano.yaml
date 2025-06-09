@@ -1,6 +1,6 @@
 # @package datamodule
 defaults:
-  - /datamodule/semantic/synthetic_nano.yaml
+  - /datamodule/semantic/synthetic.yaml
 
 # point features used for training
 point_hf: []

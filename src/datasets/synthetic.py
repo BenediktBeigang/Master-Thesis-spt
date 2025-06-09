@@ -6,6 +6,7 @@ import shutil
 import logging
 from zipfile import ZipFile
 from plyfile import PlyData
+import laspy
 from typing import List
 from torch_geometric.data.extract import extract_zip
 from torch_geometric.nn.pool.consecutive import consecutive_cluster
@@ -40,10 +41,9 @@ def read_synthetic(
         xyz: bool = True,
         rgb: bool = True,
         semantic: bool = True,
-        instance: bool = False,
         remap: bool = False
 ) -> Data:
-    """Read a synthetic pointcloud –i.e. a tile– saved as las.
+    """Read a synthetic pointcloud saved as LAS.
 
     :param filepath: str
         Absolute path to the LAS file
@@ -53,45 +53,36 @@ def read_synthetic(
         Whether RGB colors should be saved in the output Data.rgb
     :param semantic: bool
         Whether semantic labels should be saved in the output Data.y
-    :param instance: bool
-        Whether instance labels should be saved in the output Data.obj
     :param remap: bool
         Whether semantic labels should be mapped from their KITTI-360 ID
         to their train ID. For more details, see:
         https://github.com/autonomousvision/kitti360Scripts/blob/master/kitti360scripts/evaluation/semantic_3d/evalPointLevelSemanticLabeling.py
     """
     data = Data()
-    with open(filepath, "rb") as f:
-        window = PlyData.read(f)
-        attributes = [p.name for p in window['vertex'].properties]
+    print("Reading synthetic tile from", filepath)
+    
+    las = laspy.read(filepath)
+    
+    if xyz:
+        pos = torch.stack([
+            torch.tensor(las[axis].copy(), dtype=torch.float32)
+            for axis in ["X", "Y", "Z"]
+        ], dim=-1)
+        pos *= las.header.scale  # LAS scale anwenden
+        pos_offset = pos[0]
+        data.pos = (pos - pos_offset).float()
+        data.pos_offset = pos_offset
 
-        if xyz:
-            pos = torch.stack([
-                torch.FloatTensor(window["vertex"][axis])
-                for axis in ["x", "y", "z"]], dim=-1)
-            pos_offset = pos[0]
-            data.pos = pos - pos_offset
-            data.pos_offset = pos_offset
+    if rgb:
+        # RGB in LAS ist typischerweise uint16 in [0, 65535]
+        data.rgb = to_float_rgb(torch.stack([
+            torch.FloatTensor(las[axis].astype('float32') / 65535)
+            for axis in ["red", "green", "blue"]], dim=-1))
 
-        if rgb:
-            data.rgb = to_float_rgb(torch.stack([
-                torch.FloatTensor(window["vertex"][axis])
-                for axis in ["red", "green", "blue"]], dim=-1))
-
-        if semantic and 'semantic' in attributes:
-            y = torch.LongTensor(window["vertex"]['PointSourceId'])
-            data.y = torch.from_numpy(ID2TRAINID)[y] if remap else y
-
-        # if instance and 'instance' in attributes:
-        #     idx = torch.arange(data.num_points)
-        #     obj = torch.LongTensor(window["vertex"]['instance'])
-        #     # is_stuff = obj % 1000 == 0
-        #     # obj[is_stuff] = 0
-        #     obj = consecutive_cluster(obj)[0]
-        #     count = torch.ones_like(obj)
-        #     y = torch.LongTensor(window["vertex"]['semantic'])
-        #     y = torch.from_numpy(ID2TRAINID)[y] if remap else y
-        #     data.obj = InstanceData(idx, obj, count, y, dense=True)
+    if semantic:
+        # Anpassen je nach deinem LAS-Attribut für Labels
+        y = torch.from_numpy(las['point_source_id'].astype('int64'))
+        data.y = torch.from_numpy(ID2TRAINID)[y] if remap else y
 
     return data
 
@@ -183,28 +174,7 @@ class Synthetic(BaseDataset):
     def download_dataset(self) -> None:
         """Download the Synthetic dataset.
         """
-        
         log.info("The synthetic dataset does not support automatic download. You have to place the dataset by hand.\n")
-        
-        # # Name of the downloaded dataset zip
-        # zip_name = self._test_zip_name if self.stage == 'test' \
-        #     else self._trainval_zip_name
-
-        # # Accumulated 3D point clouds with annotations
-        # if not osp.exists(osp.join(self.root, zip_name)):
-        #     if self.stage != 'test':
-        #         msg = 'Accumulated Point Clouds for Train & Val (12G)'
-        #     else:
-        #         msg = 'Accumulated Point Clouds for Test (1.2G)'
-        #     log.error(
-        #         f"\nKITTI-360 does not support automatic download.\n"
-        #         f"Please go to the official webpage {self._form_url}, "
-        #         f"manually download the '{msg}' (i.e. '{zip_name}') to your "
-        #         f"'{self.root}/' directory, and re-run.\n"
-        #         f"The dataset will automatically be unzipped into the "
-        #         f"following structure:\n"
-        #         f"{self.raw_file_structure}\n")
-        #     sys.exit(1)
         
 
     def read_single_raw_cloud(self, raw_cloud_path: str) -> 'Data':
@@ -224,51 +194,31 @@ class Synthetic(BaseDataset):
         while `y < 0` AND `y >= self.num_classes` ARE VOID LABELS.
         This applies to both `Data.y` and `Data.obj.y`.
         """
-        return read_synthetic(
-            raw_cloud_path, semantic=True, instance=False, remap=True)
+        return read_synthetic(raw_cloud_path, xyz=True, rgb=True, semantic=True, remap=True)
 
     @property
     def raw_file_structure(self) -> str:
         return f"""
     {self.root}/
         └── raw/
-            └── {{train, val, test}}/
-                └── seed_{{seq:0>4}}
-                    └── tile_{{tile:0>4}}.las
-            """
+            └── {{seq:0>4}}_{{seq:0>12}}.las
+        """
 
     def id_to_relative_raw_path(self, id: str) -> str:
-        """Given a cloud id as stored in `self.cloud_ids`, return the
-        path (relative to `self.raw_dir`) of the corresponding raw
-        cloud.
-        """        
-        if id in self.all_cloud_ids['train']:
-            stage = 'train'
-        elif id in self.all_cloud_ids['val']:
-            stage = 'train'
-        elif id in self.all_cloud_ids['test']:
-            stage = 'test'
-        else:
-            raise ValueError(f"Unknown tile id '{id}'")
-        return osp.join(stage, self.id_to_base_id(id) + '.las')
+        """All files are directly in the raw/ folder"""
+        return self.id_to_base_id(id) + '.las'
 
+    
     def processed_to_raw_path(self, processed_path: str) -> str:
-        """Return the raw cloud path corresponding to the input
-        processed path.
-        """
-        # Extract useful information from <path>
-        stage, hash_dir, seed_id, cloud_id = \
-            osp.splitext(processed_path)[0].split(os.sep)[-4:]
-
-        # Raw 'val' and 'trainval' tiles are all located in the
-        # 'raw/train/' directory
-        stage = 'train' if stage in ['trainval', 'val'] else stage
-
-        # Remove the tiling in the cloud_id, if any
+        """Return the raw cloud path corresponding to the input processed path."""
+        # Extract cloud_id from processed path
+        stage, hash_dir, cloud_id = \
+            osp.splitext(processed_path)[0].split(os.sep)[-3:]
+        
+        # Remove tiling from cloud_id if any
         base_cloud_id = self.id_to_base_id(cloud_id)
-
-        # Read the raw cloud data
-        raw_path = osp.join(self.raw_dir, stage, seed_id, base_cloud_id + '.las')
-
+        
+        # Alle raw files sind direkt im raw_dir
+        raw_path = osp.join(self.raw_dir, base_cloud_id + '.las')
         return raw_path
 
