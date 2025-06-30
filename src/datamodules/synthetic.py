@@ -1,6 +1,5 @@
 import logging
 from src.datamodules.base import BaseDataModule
-from src.datasets import KITTI360, MiniKITTI360
 from src.datasets import Synthetic
 
 

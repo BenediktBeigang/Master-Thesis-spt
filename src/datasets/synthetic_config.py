@@ -8,16 +8,49 @@ import os.path as osp
 
 TILES = {
     'train': [
-        '10_202506081336',
+        '10_202506081336_frames_1_to_1056_noise_parts_processed',
+        '11_202506081407_frames_1_to_1056_noise_parts_processed',
+        '13_202506081442_frames_1_to_1056_noise_parts_processed',
+        '14_202506130743_frames_1_to_1056_noise_parts_processed',
+        '15_202506130819_frames_1_to_1056_noise_parts_processed',
+        '16_202506130842_frames_1_to_1056_noise_parts_processed',
+        '17_202506130906_frames_1_to_1056_noise_parts_processed',
+        '18_202506130931_frames_1_to_1056_noise_parts_processed',
+        '19_202506131118_frames_1_to_1056_noise_parts_processed',
+        '20_202506131140_frames_1_to_1056_noise_parts_processed',
+        '21_202506131216_frames_1_to_1056_noise_parts_processed',
+        '22_202506131253_frames_1_to_1056_noise_parts_processed',
+        '23_202506230623_frames_1_to_1056_noise_parts_processed',
+        '24_202506230655_frames_1_to_1056_noise_parts_processed',
+        '25_202506230727_frames_1_to_1056_noise_parts_processed',
+        '26_202506230751_frames_1_to_1056_noise_parts_processed',
+        '27_202506230820_frames_1_to_1056_noise_parts_processed',
+        '28_202506230935_frames_1_to_1056_noise_parts_processed',
+        '29_202506231006_frames_1_to_1056_noise_parts_processed',
+        '30_202506210952_frames_1_to_1056_noise_parts_processed',
+        '31_202506240609_frames_1_to_1056_noise_parts_processed',
+        '32_202506240636_frames_1_to_1056_noise_parts_processed',
+        '33_202506240705_frames_1_to_1056_noise_parts_processed',
+        '34_202506240733_frames_1_to_1056_noise_parts_processed',
     ],
-
+    
     'val': [
-        '11_202506081407',
+        '35_202506240804_frames_1_to_1056_noise_parts_processed',
+        '36_202506240835_frames_1_to_1056_noise_parts_processed',
+        '37_202506240910_frames_1_to_1056_noise_parts_processed',
+        '38_202506240940_frames_1_to_1056_noise_parts_processed',
+        '39_202506241010_frames_1_to_1056_noise_parts_processed',
+        '40_202506241038_frames_1_to_1056_noise_parts_processed',
+        '41_202506241135_frames_1_to_1056_noise_parts_processed',
     ],
-
+    
     'test': [
-        '13_202506081442',
-    ]}
+        '42_202506241210_frames_1_to_1056_noise_parts_processed',
+        '43_202506021352_frames_1_to_1049_noise_parts_processed',
+        '44_202506241317_frames_1_to_1056_noise_parts_processed',
+        '45_202506021650_frames_1_to_1049_noise_parts_processed',
+    ]
+}
 
 
 ########################################################################

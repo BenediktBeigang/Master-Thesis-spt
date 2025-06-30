@@ -201,7 +201,7 @@ class Synthetic(BaseDataset):
         return f"""
     {self.root}/
         └── raw/
-            └── {{seq:0>4}}_{{seq:0>12}}.las
+            └── {{seq:0>4}}_{{seq:0>12}}_frames_1_to_{{seq:0>4}}_noise_parts_processed.las
         """
 
     def id_to_relative_raw_path(self, id: str) -> str:
