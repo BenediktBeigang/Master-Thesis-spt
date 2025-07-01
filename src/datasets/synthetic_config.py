@@ -1,12 +1,14 @@
 import numpy as np
 import os.path as osp
 
+USE_KITTI_TRAIN_IDS: bool = False
+
 
 ########################################################################
 #                              Data splits                             #
 ########################################################################
 
-TILES = {
+TILES: dict[str, list[str]] = {
     'train': [
         '10_202506081336_frames_1_to_1056_noise_parts_processed',
         '11_202506081407_frames_1_to_1056_noise_parts_processed',
@@ -57,21 +59,25 @@ TILES = {
 #                                Labels                                #
 ########################################################################
 
-SYNTHETIC_NUM_CLASSES = 15
+SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else 5
 
 # targeting kitti kitti-trainIDs [terrain, fence, pole, car, motorcycle]
-ID2TRAINID = np.asarray([9, 4, 5, 11, 13, 8])
+ID2TRAINID: np.ndarray = np.asarray([9, 4, 5, 11, 13, 8])
 
-# CLASS_NAMES = [
-#     'ground',
-#     'pipe',
-#     'armature',
-#     'corner',
-#     'adapter',
-#     'other']
+############################
+####### CLASS NAMES ########
+############################
+
+CLASS_NAMES_SYNTHETIC: list[str] = [
+    'ground',    # 0
+    'pipe',      # 1
+    'armature',  # 2
+    'corner',    # 3
+    'adapter',   # 4
+    'other']     # 5
 
 # Erweitere CLASS_NAMES für alle 15 KITTI-360 Klassen
-CLASS_NAMES = [
+CLASS_NAMES_KITTI: list[str] = [
     'road',           # 0
     'sidewalk',       # 1  
     'building',       # 2
@@ -89,7 +95,13 @@ CLASS_NAMES = [
     'other',          # 14
     'ignored']        # 15 -> void/ignored Klasse
 
-CLASS_COLORS = np.asarray([
+CLASS_NAMES: list[str] = CLASS_NAMES_KITTI if USE_KITTI_TRAIN_IDS else CLASS_NAMES_SYNTHETIC
+
+#############################
+####### CLASS COLORS ########
+#############################
+
+CLASS_COLORS_KITTI: np.ndarray = np.asarray([
     (  0,  0,  0),
     (  0,  0,  0),
     (  0,  0,  0),
@@ -138,17 +150,21 @@ CLASS_COLORS = np.asarray([
     (  0,  0,142),
 ])
 
-# CLASS_COLORS = np.asarray([
-#     [ 91, 255,  11], # brown ground
-#     [255, 255,   0], # yellow pipe
-#     [255,   0,   0], # red armature
-#     [ 77, 255, 216], # blue corner
-#     [ 65, 255,  80], # green adapter
-#     [128, 128, 128], # gray other
-#     ])
+CLASS_COLORS_SYNTETIC: np.ndarray = np.asarray([
+    [ 91, 255,  11], # brown ground
+    [255, 255,   0], # yellow pipe
+    [255,   0,   0], # red armature
+    [ 77, 255, 216], # blue corner
+    [ 65, 255,  80], # green adapter
+    [128, 128, 128], # gray other
+    ])
 
-# THING_CLASSES = [5, 11, 13]
-# STUFF_CLASSES = [0, 1, 5]
+CLASS_COLORS: np.ndarray = CLASS_COLORS_KITTI if USE_KITTI_TRAIN_IDS else CLASS_COLORS_SYNTETIC
 
-THING_CLASSES = [4, 5, 11, 13]  # deine gemappten Klassen die "things" sind
-STUFF_CLASSES = [i for i in range(SYNTHETIC_NUM_CLASSES) if i not in THING_CLASSES]
+
+########################################################################
+#                            Class Mappings                            #
+########################################################################
+
+THING_CLASSES: list[int] = [4, 5, 11, 13]  # deine gemappten Klassen die "things" sind
+STUFF_CLASSES: list[int] = [i for i in range(SYNTHETIC_NUM_CLASSES) if i not in THING_CLASSES]
