@@ -28,8 +28,10 @@ defaults:
 
 datamodule:
   # pc_tiling: 2 # split each cloud into 2^pc_tiling=4 tiles, based on their principal components. Reduces preprocessing- and inference-time GPU memory
+  # xy_tiling: 2
+  # sample_graph_k: 4 # 2 spherical samples in each batch instead of 4. Reduces train-time GPU memory
   xy_tiling: 5
-  sample_graph_k: 2 # 2 spherical samples in each batch instead of 4. Reduces train-time GPU memory
+  sample_graph_k: 2
 
 callbacks:
   gradient_accumulator:

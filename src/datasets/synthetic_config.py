@@ -1,7 +1,9 @@
+from __future__ import annotations
 import numpy as np
 import os.path as osp
 
 USE_KITTI_TRAIN_IDS: bool = False
+ONLY_PIPES: bool = True
 
 
 ########################################################################
@@ -97,10 +99,20 @@ TILES: dict[str, list[str]] = {
 #                                Labels                                #
 ########################################################################
 
-SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else 5
+SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else (2 if ONLY_PIPES else 5)
 
-# targeting kitti kitti-trainIDs [terrain, fence, pole, car, motorcycle]
-ID2TRAINID: np.ndarray = np.asarray([9, 4, 5, 11, 13, 8])
+def remapArrays() -> np.ndarray | None:
+    if not USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
+        print("When USE_KITTI_TRAIN_IDS and ONLY_PIPES are both False this mapping should not be called!")
+        return None
+    if not USE_KITTI_TRAIN_IDS and ONLY_PIPES:
+        return np.asarray([0, 1, 1, 1, 1, 0])
+    if USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
+        # targeting kitti kitti-trainIDs [terrain/9, fence/4, pole/5, car/11, motorcycle/13], is only used if USE_KITTI_TRAIN_IDS is True
+        return np.asarray([9, 4, 5, 11, 13, 8])
+    return np.asarray([9, 4, 4, 4, 4, 8])
+
+ID2TRAINID: np.ndarray | None =  remapArrays()
 
 ############################
 ####### CLASS NAMES ########
