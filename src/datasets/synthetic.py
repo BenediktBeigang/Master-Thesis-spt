@@ -194,7 +194,7 @@ class Synthetic(BaseDataset):
         while `y < 0` AND `y >= self.num_classes` ARE VOID LABELS.
         This applies to both `Data.y` and `Data.obj.y`.
         """
-        return read_synthetic(raw_cloud_path, xyz=True, rgb=True, semantic=True, remap=USE_KITTI_TRAIN_IDS or ONLY_PIPES)
+        return read_synthetic(raw_cloud_path, xyz=True, rgb=True, semantic=True, remap=True)
 
     @property
     def raw_file_structure(self) -> str:
