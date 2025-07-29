@@ -11,13 +11,13 @@ dataloader:
 # here to facilitate model parameterization with config interpolation
 # num_classes: 15
 # stuff_classes: [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14]
-num_classes: 5
-stuff_classes: [0, 1, 2, 3, 4] # ground, pipe, armature, corner, adapter
-# num_classes: 2
-# stuff_classes: [0, 1] # ground, pipe
+# num_classes: 5
+# stuff_classes: [0, 1, 2, 3, 4] # ground, pipe, armature, corner, adapter
+num_classes: 4
+stuff_classes: [0, 1, 2, 3] # ground, pipe, armature, background
 
 trainval: False
-# xy_tiling: 5
+xy_tiling: 5
 
 # Features that will be computed, saved, loaded for points and segments
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 import numpy as np
 import os.path as osp
 
-USE_KITTI_TRAIN_IDS: bool = False
-ONLY_PIPES: bool = False
+# USE_KITTI_TRAIN_IDS: bool = False
+# ONLY_PIPES: bool = True
 
 
 ########################################################################
@@ -12,6 +12,7 @@ ONLY_PIPES: bool = False
 
 TILES: dict[str, list[str]] = {
     'train': [
+        # pipe-colors from dataset generation
         '0200_202507230825_frames_1_to_1059_noise_parts',
         '0201_202507230837_frames_1_to_1059_noise_parts',
         '0202_202507230848_frames_1_to_1059_noise_parts',
@@ -38,6 +39,8 @@ TILES: dict[str, list[str]] = {
         '0223_202507231410_frames_1_to_1059_noise_parts',
         '0224_202507231422_frames_1_to_1059_noise_parts',
         '0225_202507231434_frames_1_to_1059_noise_parts',
+        
+        # pipe-colors have random value based on their original color
         '0226_202507231445_frames_1_to_1059_noise_parts',
         '0227_202507231457_frames_1_to_1059_noise_parts',
         '0228_202507231509_frames_1_to_1059_noise_parts',
@@ -64,6 +67,8 @@ TILES: dict[str, list[str]] = {
         '0249_202507261110_frames_1_to_1059_noise_parts',
         '0250_202507261123_frames_1_to_1059_noise_parts',
         '0251_202507261134_frames_1_to_1059_noise_parts',
+        
+        # pipe-colors have one random value for the whole cloud
         '0252_202507261146_frames_1_to_1059_noise_parts',
         '0253_202507261159_frames_1_to_1059_noise_parts',
         '0254_202507261210_frames_1_to_1059_noise_parts',
@@ -95,18 +100,23 @@ TILES: dict[str, list[str]] = {
     ],
     
     'val': [
+        # pipe-colors from dataset generation
         '0280_202507262025_frames_1_to_1059_noise_parts',
         '0281_202507262037_frames_1_to_1059_noise_parts',
         '0282_202507262049_frames_1_to_1059_noise_parts',
         '0283_202507262101_frames_1_to_1059_noise_parts',
         '0284_202507262113_frames_1_to_1059_noise_parts',
         '0285_202507262125_frames_1_to_1059_noise_parts',
+
+        # pipe-colors have random value based on their original color
         '0286_202507262137_frames_1_to_1059_noise_parts',
         '0287_202507262149_frames_1_to_1059_noise_parts',
         '0288_202507262201_frames_1_to_1059_noise_parts',
         '0289_202507262213_frames_1_to_1059_noise_parts',
         '0290_202507262225_frames_1_to_1059_noise_parts',
         '0291_202507262236_frames_1_to_1059_noise_parts',
+
+        # pipe-colors have one random value for the whole cloud
         '0292_202507262248_frames_1_to_1059_noise_parts',
         '0293_202507262300_frames_1_to_1059_noise_parts',
         '0294_202507262312_frames_1_to_1059_noise_parts',
@@ -134,17 +144,22 @@ TILES: dict[str, list[str]] = {
 #                                Labels                                #
 ########################################################################
 
-SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else (2 if ONLY_PIPES else 5)
+# SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else (3 if ONLY_PIPES else 5)
+SYNTHETIC_NUM_CLASSES: int = 4
 
 def remapArrays() -> np.ndarray | None:
-    if not USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
-        return np.asarray([0, 1, 2, 3, 4, 0, 1, 5, 5])
-    if not USE_KITTI_TRAIN_IDS and ONLY_PIPES:
-        return np.asarray([0, 1, 1, 1, 1, 0, 0, 0, 0])
-    if USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
-        # targeting kitti kitti-trainIDs [terrain/9, fence/4, pole/5, car/11, motorcycle/13], is only used if USE_KITTI_TRAIN_IDS is True
-        return np.asarray([9, 4, 5, 11, 13, 8, 8, 8, 8])
-    return np.asarray([9, 4, 4, 4, 4, 8, 8, 8, 8])
+    # if not USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
+    # return np.asarray([0, 1, 2, 3, 4, 0, 1, 5, 5])
+    
+    # if not USE_KITTI_TRAIN_IDS and ONLY_PIPES:
+    return np.asarray([0, 1, 2, 1, 1, 0, 1, 3, 3])
+    
+    # if USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
+    # targeting kitti kitti-trainIDs [terrain/9, fence/4, pole/5, car/11, motorcycle/13], is only used if USE_KITTI_TRAIN_IDS is True
+    # return np.asarray([9, 4, 5, 11, 13, 8, 8, 8, 8])
+    
+    # if USE_KITTI_TRAIN_IDS and ONLY_PIPES:
+    # return np.asarray([9, 4, 4, 4, 4, 8, 8, 8, 8])
 
 ID2TRAINID: np.ndarray | None =  remapArrays()
 
@@ -152,16 +167,18 @@ ID2TRAINID: np.ndarray | None =  remapArrays()
 ####### CLASS NAMES ########
 ############################
 
-CLASS_NAMES_SYNTHETIC_RAW: list[str] = [
-    'ground',           # 0
-    'pipe',             # 1
-    'armature',         # 2
-    'corner',           # 3
-    'adapter',          # 4
-    'feet',             # 5
-    'tpiece',           # 6
-    'building',         # 7
-    'armatureDecoy']    # 8
+# CLASS_NAMES_SYNTHETIC_DATASET: list[str] = [
+#     'ground',           # 0
+#     'pipe',             # 1
+#     'armature',         # 2
+#     'corner',           # 3
+#     'adapter',          # 4
+#     'feet',             # 5
+#     'tpiece',           # 6
+#     'building',         # 7
+#     'armatureDecoy',    # 8
+#     'other'             # 9
+# ]
 
 CLASS_NAMES_SYNTHETIC: list[str] = [
     'ground',     # 0
@@ -169,7 +186,16 @@ CLASS_NAMES_SYNTHETIC: list[str] = [
     'armature',   # 2
     'corner',     # 3
     'adapter',    # 4
-    'other']      # 5
+    'other'       # 5
+]
+
+CLASS_NAMES_SYNTHETIC_PIPE_ONLY: list[str] = [
+    'ground',     # 0
+    'pipe',       # 1
+    'armature',   # 2
+    'background', # 3
+    'other'       # 4
+]
 
 # Erweitere CLASS_NAMES für alle 15 KITTI-360 Klassen
 CLASS_NAMES_KITTI: list[str] = [
@@ -190,7 +216,8 @@ CLASS_NAMES_KITTI: list[str] = [
     'other',          # 14
     'ignored']        # 15 -> void/ignored Klasse
 
-CLASS_NAMES: list[str] = CLASS_NAMES_KITTI if USE_KITTI_TRAIN_IDS else CLASS_NAMES_SYNTHETIC
+# CLASS_NAMES: list[str] = CLASS_NAMES_KITTI if USE_KITTI_TRAIN_IDS else CLASS_NAMES_SYNTHETIC
+CLASS_NAMES: list[str] = CLASS_NAMES_SYNTHETIC_PIPE_ONLY
 
 #############################
 ####### CLASS COLORS ########
@@ -245,21 +272,34 @@ CLASS_COLORS_KITTI: np.ndarray = np.asarray([
     (  0,  0,142),
 ])
 
+CLASS_COLORS_SYNTETIC_PIPE_ONLY: np.ndarray = np.asarray([
+    [ 91, 255,  11], # brown ground
+    [255, 255,   0], # yellow pipe
+    [255,   0,   0], # red armature
+    [128, 128, 128], # background corner
+    [128, 128, 128], # gray other
+    ])
+
 CLASS_COLORS_SYNTETIC: np.ndarray = np.asarray([
     [ 91, 255,  11], # brown ground
     [255, 255,   0], # yellow pipe
     [255,   0,   0], # red armature
     [ 77, 255, 216], # blue corner
     [ 65, 255,  80], # green adapter
+    [128, 128, 128], # gray feet
+    [128, 128, 128], # gray tpiece
+    [128, 128, 128], # gray building
+    [128, 128, 128], # gray armatureDecoy
     [128, 128, 128], # gray other
     ])
 
-CLASS_COLORS: np.ndarray = CLASS_COLORS_KITTI if USE_KITTI_TRAIN_IDS else CLASS_COLORS_SYNTETIC
+CLASS_COLORS: np.ndarray = CLASS_COLORS_SYNTETIC_PIPE_ONLY # CLASS_COLORS_KITTI if USE_KITTI_TRAIN_IDS else CLASS_COLORS_SYNTETIC
+
 
 
 ########################################################################
 #                            Class Mappings                            #
 ########################################################################
 
-THING_CLASSES: list[int] = [4, 5, 11, 13]  # deine gemappten Klassen die "things" sind
-STUFF_CLASSES: list[int] = [i for i in range(SYNTHETIC_NUM_CLASSES) if i not in THING_CLASSES]
+# THING_CLASSES: list[int] = [4, 5, 11, 13]  # deine gemappten Klassen die "things" sind
+# STUFF_CLASSES: list[int] = [i for i in range(SYNTHETIC_NUM_CLASSES) if i not in THING_CLASSES]
