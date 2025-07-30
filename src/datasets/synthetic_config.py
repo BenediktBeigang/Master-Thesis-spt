@@ -144,22 +144,20 @@ TILES: dict[str, list[str]] = {
 #                                Labels                                #
 ########################################################################
 
-# SYNTHETIC_NUM_CLASSES: int = 15 if USE_KITTI_TRAIN_IDS else (3 if ONLY_PIPES else 5)
-SYNTHETIC_NUM_CLASSES: int = 4
+# SYNTHETIC_NUM_CLASSES: int = 15 # KITTI-360
+SYNTHETIC_NUM_CLASSES: int = 4 # pipes, armature, ground, background
+# SYNTHETIC_NUM_CLASSES: int = 5 # pipes, armature, corner, adapter, ground
 
 def remapArrays() -> np.ndarray | None:
     # if not USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
-    # return np.asarray([0, 1, 2, 3, 4, 0, 1, 5, 5])
+    # return np.asarray([0, 1, 2, 3, 4, 0, 1, 5, 5]) # 0: ground, 1: pipe, 2: armature, 3: corner, 4: adapter, 5: other
     
-    # if not USE_KITTI_TRAIN_IDS and ONLY_PIPES:
-    return np.asarray([0, 1, 2, 1, 1, 0, 1, 3, 3])
+    return np.asarray([0, 1, 2, 1, 1, 0, 1, 3, 3]) # 0: ground, 1: pipe, 2: armature, 3: background
     
-    # if USE_KITTI_TRAIN_IDS and not ONLY_PIPES:
     # targeting kitti kitti-trainIDs [terrain/9, fence/4, pole/5, car/11, motorcycle/13], is only used if USE_KITTI_TRAIN_IDS is True
-    # return np.asarray([9, 4, 5, 11, 13, 8, 8, 8, 8])
+    # return np.asarray([9, 4, 5, 11, 13, 8, 8, 8, 8]) # KITTI-360
     
-    # if USE_KITTI_TRAIN_IDS and ONLY_PIPES:
-    # return np.asarray([9, 4, 4, 4, 4, 8, 8, 8, 8])
+    # return np.asarray([9, 4, 4, 4, 4, 8, 8, 8, 8]) # KITTI-360 but only armature, corner and adapter are pipes
 
 ID2TRAINID: np.ndarray | None =  remapArrays()
 
@@ -276,7 +274,7 @@ CLASS_COLORS_SYNTETIC_PIPE_ONLY: np.ndarray = np.asarray([
     [ 91, 255,  11], # brown ground
     [255, 255,   0], # yellow pipe
     [255,   0,   0], # red armature
-    [128, 128, 128], # background corner
+    [128, 128, 128], # gray background
     [128, 128, 128], # gray other
     ])
 
