@@ -88,28 +88,48 @@ def predict(filepath, checkpoint):
 
 
 if __name__ == "__main__":
+    """
+    Use it with:
+    python predict.py --file path/to/your/file.las --checkpoint path/to/your
+    """
     parser = argparse.ArgumentParser(description="LAS-Dateien nach PointSourceId filtern")
     parser.add_argument(
         "--file", "-f", 
-        help="Einzelne LAS-Datei verarbeiten"
+        help="Einzelne LAS-Datei verarbeiten",
+        required=False
     )
     parser.add_argument(
         "--checkpoint", "-c",
         help="Pfad zum Checkpoint für die Klassifizierung",
     )
-
     args = parser.parse_args()
     
-    if not os.path.exists(args.file) or not os.path.isfile(args.checkpoint):
-        print(f"Fehler: Datei {args.file} oder Checkpoint nicht gefunden {args.checkpoint}")
+    if not os.path.isfile(args.checkpoint):
+        print(f"Fehler: Checkpoint nicht gefunden {args.checkpoint}")
         exit(1)
     
-    start_time = time.time()
+    if not args.file:
+       path = [
+           "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_0/ontras_0.las",
+           "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_1/ontras_1.las",
+           "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_2/ontras_2.las",
+           "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_3/ontras_3.las",
+        #    "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_4/ontras_4.las",
+        #    "/home/benedikt/Documents/repos/superpoint_transformer/data/ontras/ontras_5/ontras_5.las",
+           ]
+    
 
-    predict(args.file, args.checkpoint)
-    
-    end_time = time.time()
-    total_time = end_time - start_time
-    print(f"Prediction completed in {total_time:.2f} seconds")
-    
+    if args.file:
+        start_time = time.time()
+        predict(args.file, args.checkpoint)
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Prediction completed in {total_time:.2f} seconds")
+    else:
+        for file in path:
+            start_time = time.time()
+            predict(file, args.checkpoint)
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"Prediction for {file} completed in {total_time:.2f} seconds")    
     
