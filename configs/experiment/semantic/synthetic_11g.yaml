@@ -39,7 +39,7 @@ callbacks:
       0: 2 # accumulate gradient every 2 batches, to make up for reduced batch size
 
 trainer:
-  max_epochs: 70 # to keep same nb of steps: 4x more tiles, 2-step gradient accumulation -> epochs/2
+  max_epochs: 35 # 70 # to keep same nb of steps: 4x more tiles, 2-step gradient accumulation -> epochs/2
 
 model:
   optimizer:
