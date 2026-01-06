@@ -1,11 +1,10 @@
 import pdal
 import json
-import argparse
 import os
 import time
 import glob
 
-radius = 0.02
+RADIUS = 0.02  # space between points in meters
 
 
 def process(input_file, output_file):
@@ -18,7 +17,7 @@ def process(input_file, output_file):
     pipeline = {
         "pipeline": [
             input_file,
-            {"type": "filters.sample", "radius": radius},
+            {"type": "filters.sample", "radius": RADIUS},
             {
                 "type": "filters.expression",
                 "expression": "!((PointSourceId == 5 && Z < -3) || Z > 50)",
@@ -38,21 +37,14 @@ def process(input_file, output_file):
 
 
 if __name__ == "__main__":
-    # folder_path = "/home/benedikt/Documents/repos/pointcloud-dataset/synthetic/raw"
-    folder_path = "/media/benedikt/50140 LOS3 Brandenburg Nord/Synthetic/raw/800"
-    # folder_path = (
-    #     "/home/benedikt/Documents/repos/pointcloud-dataset/synthetic/cleaned/0700"
-    # )
-    # target_folder = (
-    #     "/home/benedikt/Documents/repos/pointcloud-dataset/synthetic/cleaned/0800"
-    # )
-    # las_files = glob.glob(os.path.join(folder_path, "*.las"))
+    # folder where all .las files are located
+    folder_path = "./data/synthetic/raw"
 
-    las_files = [
-        "/mnt/c/Users/bened/Documents/GitHub/gds/output/810_202510210725_frames_1_to_1059_noise_parts.las",
-        "/mnt/c/Users/bened/Documents/GitHub/gds/output/811_202510210744_frames_1_to_1059_noise_parts.las",
-    ]
-    target_folder = "/mnt/c/Users/bened/Documents/GitHub/gds/output"
+    # get all .las files in the folder
+    las_files = glob.glob(os.path.join(folder_path, "*.las"))
+
+    # target folder to save processed files CHANGE IF THE FILES SHOULD NOT BE OVERWRITTEN
+    target_folder = folder_path
 
     for las_file in las_files:
         las_file_without_extension = os.path.splitext(os.path.basename(las_file))[0]

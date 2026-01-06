@@ -118,6 +118,7 @@ pip install torch-ransac3d
 pip install pgeof
 pip install pycut-pursuit
 pip install pygrid-graph
+pip install laspy
 
 echo
 echo

@@ -1,18 +1,25 @@
-== Superpoint Transformer for Synthetic Data
+== Superpoint Transformer for synthetic data
 
 This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments. For a comprehensive understanding, please refer to the main README.md file.
 
-=== Installation
+[mermaid]
+----
+flowchart LR
+  A[Blender generated pointclouds] --> B[Pointcloud cleanup] --> C[Pre-Transform] --> D[Training] --> E[Checkpoint]
+  R[Real pointclouds] --> P[Predicted pointclouds] --> X[Pipe extraction]
+  E --> P
 
-Use the `install_cuda_128_torch270_py39.sh` script to set up the required environment with CUDA 12.8 and PyTorch 2.0.7 for Python 3.9.
-This ensures compatibility with Blackwell-GPUs like the RTX 5060-TI this project was developed on.
+  classDef external stroke-dasharray: 10 5
+  class A,X external
+----
 
-=== Relevant files for Synthetic Data
+
+=== Relevant files for synthetic data
 
 Below is an cutted and advanced overview of the most relevant files and folders for working with synthetic data experiments.
 Places that are visited or modified between trainings are marked with "👉".
 
-### 🔩  Project structure
+.Project Structure:
 ```
 └── superpoint_transformer
     │
@@ -25,7 +32,6 @@ Places that are visited or modified between trainings are marked with "👉".
     │   └── experiment                # Experiment configs
     │       └── semantic                  # Semantic segmentation experiments
     │           └── 👉synthetic_11g.yaml      # Config to train on synthetic data with limited VRAM
-    │   
     │
     ├── 👉data                    # Project data (see docs/datasets.md)
     │   ├── real                      # Real data to test on (`.las`)
@@ -48,8 +54,9 @@ Places that are visited or modified between trainings are marked with "👉".
     │   │
     │   └── train.py                  # Run training
     │
-    ├── syntheticScripts          # Scripts for synthetic data processing
-    │   ├── 👉postprocessing.py       # Cleans generated pointclouds
+    ├── syntheticScriptsAndDocs   # Scripts and docs for synthetic data processing
+    │   ├── 👉howto_install_cuda.adoc # Setup documentation for Superpoint Transformer
+    │   ├── 👉pc_cleanup.py           # Cleans generated pointclouds
     │   └── 👉predict.py              # Predicts for a given checkpoint one ore more pointclouds
     │
     ├── install.sh                # Installation script
@@ -60,6 +67,18 @@ Places that are visited or modified between trainings are marked with "👉".
 
 === Usage
 
+==== Environment setup
+
+1. Project was tested on `Ubuntu` 24.04.2 LTS (use it if you want to minimize compatibility issues).
+2. Install CUDA and set the default version. Get help from the file `/syntheticScriptsAndDocs/howto_install_cuda.adoc`.
+    a. GPUs before Blackwell can use CUDA `12.1` or `11.8`
+    b. Blackwell-GPUs (like RTX 5060-TI) and above need CUDA `12.8`
+3. Install `miniconda`.
+4. Use the installation script to install all dependencies as `conda` environment.
+    a. For GPUs before Blackwell use `install.sh`
+    b. For Blackwell-GPUs and above use `install_cuda128_torch270_py39.sh`
+5. Install `PDAL` with conda as own environment: `conda create --yes --name pdal --channel conda-forge pdal`
+
 ==== Data preperation
 
 Put all your generated `.las`-files in `/data/synthetic/raw/`.
@@ -68,24 +87,30 @@ The following pattern for naming was used and should match your data:
 * => `<seed>_<year><month><day><HH><MM>_frames_1_to_<frames>_noise_parts.las`
 * => Example: `700_202509022301_frames_1_to_1059_noise_parts.las`
 
-Than use the `postprocessing.py` script to clean the generated pointclouds.
+Than use the `pc_cleanup.py` script to clean the generated pointclouds.
+For that you need the separate `pdal` environment created before: `conda activate pdal`
 This script simply samples to a density of 0.02m between points and removes outliers.
+
+WARNING: the default path **OVERWRITES** all pointcloud files, so change the path for your needs!
 
 Now go to the `/src/datasets/synthetic_config.py` file and add all your data you want to train with in the `TILES` array (only the name of the file and without `.las` postfix).
 You should use 20% of your data in the `val` part of the array for validation.
 
-
 ==== Training
 
 You can use the config files listed above to adjust parameters or use the already existing ones.
-The number of epochs deciding how long the training is going on can be set in `/configs/experiment/semantic/synthetic_11g.yaml` with the attribut (`max_epochs`).
+The number of epochs decides how long the training should run and can be set in `/configs/experiment/semantic/synthetic_11g.yaml` with the attribut (`max_epochs`).
 Use the following command to start training:
 
 ```bash
+conda deactivate
+
+conda activate spt
+# or for blackwell gpus
+conda activate spt_cuda128
+
 python src/train.py experiment=semantic/synthetic_11g
-
 # or continue training from a checkpoint
-
 python src/train.py experiment=semantic/synthetic_11g ckpt_path=./logs/train/runs/<your run>/checkpoints/last.ckpt
 ```
 
@@ -102,7 +127,7 @@ For example `epoch_029.ckpt` was changed to `0916_training_1_syntehtic_11g_epoch
 
 ==== Prediction on synthetic and real data
 
-For convienent prediction on real data the `syntheticScripts/predict.py` script can be used.
+For convienent prediction on real data the `syntheticScriptsAndDocs/predict.py` script can be used.
 It automatically runs the pretransform, loads the model from the checkpoint and infers the pointcloud.
 
 ```bash
