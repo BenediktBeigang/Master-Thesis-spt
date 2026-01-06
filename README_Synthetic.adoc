@@ -1,0 +1,3 @@
+== Superpoint Transformer for Synthetic Data
+
+This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments.
