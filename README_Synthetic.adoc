@@ -1,3 +1,119 @@
 == Superpoint Transformer for Synthetic Data
 
-This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments.
+This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments. For a comprehensive understanding, please refer to the main README.md file.
+
+=== Installation
+
+Use the `install_cuda_128_torch270_py39.sh` script to set up the required environment with CUDA 12.8 and PyTorch 2.0.7 for Python 3.9.
+This ensures compatibility with Blackwell-GPUs like the RTX 5060-TI this project was developed on.
+
+=== Relevant files for Synthetic Data
+
+Below is an cutted and advanced overview of the most relevant files and folders for working with synthetic data experiments.
+Places that are visited or modified between trainings are marked with "👉".
+
+### 🔩  Project structure
+```
+└── superpoint_transformer
+    │
+    ├── configs                   # Hydra configs (copied and changed from KITTI-360)
+    │   ├── datamodule                # Data configs
+    │   │   └── semantic                  # Semantic segmentation experiments
+    │   │       ├── synthetic_default.yaml    # Default parameters 
+    │   │       └── 👉synthetic.yaml          # Parameters for creation of superpoint-partition
+    │   │
+    │   └── experiment                # Experiment configs
+    │       └── semantic                  # Semantic segmentation experiments
+    │           └── 👉synthetic_11g.yaml      # Config to train on synthetic data with limited VRAM
+    │   
+    │
+    ├── 👉data                    # Project data (see docs/datasets.md)
+    │   ├── real                      # Real data to test on (`.las`)
+    │   └── synthetic                 # Synthetic dataset for training
+    │       ├── processed                 # Ready for training data after superpoint-partition (`.h5`)
+    │       └── raw                       # Raw synthetic data files (`.las`)
+    │
+    ├── docs                      # Documentation
+    ├── 👉logs                    # Logs generated (contains models as `.ckpt`-files)
+    ├── notebooks                 # Jupyter notebooks for learning and experimentation
+    │
+    ├── src                       # Source code
+    │   ├── data                      # Data structure for hierarchical partitions
+    │   ├── datamodules               # Lightning DataModules
+    │   │   └── synthetic.py              # Boilerplate code to load synthetic data
+    │   │
+    │   ├── datasets                  # Datasets
+    │   │   ├── 👉synthetic_config.py     # Synthetic data to train on, attribut mapping
+    │   │   └── 👉synthetic.py            # Implementation to load synthetic data
+    │   │
+    │   └── train.py                  # Run training
+    │
+    ├── syntheticScripts          # Scripts for synthetic data processing
+    │   ├── 👉postprocessing.py       # Cleans generated pointclouds
+    │   └── 👉predict.py              # Predicts for a given checkpoint one ore more pointclouds
+    │
+    ├── install.sh                # Installation script
+    ├── install_cuda128_torch270_py39.sh # Installation script for Blackwell GPUs
+    ├── README_Synthetic.adoc     # You are here
+    └── README.md
+```
+
+=== Usage
+
+==== Data preperation
+
+Put all your generated `.las`-files in `/data/synthetic/raw/`.
+The following pattern for naming was used and should match your data:
+
+* => `<seed>_<year><month><day><HH><MM>_frames_1_to_<frames>_noise_parts.las`
+* => Example: `700_202509022301_frames_1_to_1059_noise_parts.las`
+
+Than use the `postprocessing.py` script to clean the generated pointclouds.
+This script simply samples to a density of 0.02m between points and removes outliers.
+
+Now go to the `/src/datasets/synthetic_config.py` file and add all your data you want to train with in the `TILES` array (only the name of the file and without `.las` postfix).
+You should use 20% of your data in the `val` part of the array for validation.
+
+
+==== Training
+
+You can use the config files listed above to adjust parameters or use the already existing ones.
+The number of epochs deciding how long the training is going on can be set in `/configs/experiment/semantic/synthetic_11g.yaml` with the attribut (`max_epochs`).
+Use the following command to start training:
+
+```bash
+python src/train.py experiment=semantic/synthetic_11g
+
+# or continue training from a checkpoint
+
+python src/train.py experiment=semantic/synthetic_11g ckpt_path=./logs/train/runs/<your run>/checkpoints/last.ckpt
+```
+
+On the first training the hirachical superpoint-partition will be created automatically in the `/data/synthetic/processed/` folder.
+The best and last trained model will be saved in:
+
+=> `/logs/train/runs/<your run>/checkpoints/epoch_<best epoch>`.
+
+An own naming scheme was introduced to keep track of different trainings.
+For example `epoch_029.ckpt` was changed to `0916_training_1_syntehtic_11g_epoch_029.ckpt` where: +
+`0916`: is the date (16th September) +
+`training_1`: is the training number of that day +
+`syntehtic_11g`: is the config used for training
+
+==== Prediction on synthetic and real data
+
+For convienent prediction on real data the `syntheticScripts/predict.py` script can be used.
+It automatically runs the pretransform, loads the model from the checkpoint and infers the pointcloud.
+
+```bash
+python notebooks/predict.py --checkpoint ../checkpoints/0916_training_1_syntehtic_11g_epoch_029.ckpt
+```
+
+It can predict multiple pointclouds for one checkpoint at once.
+For that list all filepaths in the `predict.py` script.
+
+In the same folder as the orginal pointcloud the predicted pointcloud will be saved with the following naming scheme:
+
+* => `<orginal name>_predicted_<date>_t<training of the day>.las` +
+* => Example: `700_202509022301_frames_1_to_1059_noise_parts_predicted_0916_t1.las`
+
