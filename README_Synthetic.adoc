@@ -2,6 +2,20 @@
 
 This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments. For a comprehensive understanding, please refer to the main README.md file.
 
+ifdef::env-github[]
+[source,mermaid]
+----
+flowchart LR
+  A[Blender generated pointclouds] --> B[Pointcloud cleanup] --> C[Pre-Transform] --> D[Training] --> E[Checkpoint]
+  R[Real pointclouds] --> P[Predicted pointclouds] --> X[Pipe extraction]
+  E --> P
+
+  classDef external stroke-dasharray: 10 5
+  class A,X external
+----
+endif::[]
+
+ifndef::env-github[]
 [mermaid]
 ----
 flowchart LR
@@ -12,6 +26,8 @@ flowchart LR
   classDef external stroke-dasharray: 10 5
   class A,X external
 ----
+endif::[]
+
 
 
 === Relevant files for synthetic data
