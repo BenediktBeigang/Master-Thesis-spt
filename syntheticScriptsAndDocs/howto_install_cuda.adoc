@@ -1,7 +1,7 @@
 :toc: left
 == SPT Setup
 
-=== NVIDIA Toolkit und CUDA
+=== NVIDIA Toolkit, C++ Compiler and CUDA
 
 .Local CUDA-Installation
 [source, bash]
@@ -71,6 +71,7 @@ source ~/.bashrc
 ----
 
 === Conda
+
 .Install Conda
 [source, bash]
 ----

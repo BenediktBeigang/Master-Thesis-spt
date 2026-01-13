@@ -4,30 +4,24 @@ This is a shorter version of the explanation found in README.adoc, specifically 
 
 ifdef::env-github[]
 [source,mermaid]
-----
-flowchart LR
-  A[Blender generated pointclouds] --> B[Pointcloud cleanup] --> C[Pre-Transform] --> D[Training] --> E[Checkpoint]
-  R[Real pointclouds] --> P[Predicted pointclouds] --> X[Pipe extraction]
-  E --> P
-
-  classDef external stroke-dasharray: 10 5
-  class A,X external
-----
 endif::[]
-
 ifndef::env-github[]
 [mermaid]
+endif::[]
 ----
 flowchart LR
-  A[Blender generated pointclouds] --> B[Pointcloud cleanup] --> C[Pre-Transform] --> D[Training] --> E[Checkpoint]
-  R[Real pointclouds] --> P[Predicted pointclouds] --> X[Pipe extraction]
-  E --> P
+  B[Blender] 
+  CL[Pointcloud cleanup] --> PT[Pre-Transform] --> T[Training]
+  R[Real pointclouds] --> P[predict.py] 
+  X[Pipe extraction]
+  
+  B --Generated pointclouds (.las)--> CL
+  T --Checkpoint (.ckpt)--> P
+  P --Semantically segmented pointclouds (.las)--> X
 
   classDef external stroke-dasharray: 10 5
-  class A,X external
+  class B,X external
 ----
-endif::[]
-
 
 
 === Relevant files for synthetic data
@@ -65,6 +59,7 @@ Places that are visited or modified between trainings are marked with "👉".
     │   │   └── synthetic.py              # Boilerplate code to load synthetic data
     │   │
     │   ├── datasets                  # Datasets
+    |   │   ├── __init__.py               # Auto import of synthetic files 
     │   │   ├── 👉synthetic_config.py     # Synthetic data to train on, attribut mapping
     │   │   └── 👉synthetic.py            # Implementation to load synthetic data
     │   │
@@ -147,7 +142,7 @@ For convienent prediction on real data the `syntheticScriptsAndDocs/predict.py` 
 It automatically runs the pretransform, loads the model from the checkpoint and infers the pointcloud.
 
 ```bash
-python notebooks/predict.py --checkpoint ../checkpoints/0916_training_1_syntehtic_11g_epoch_029.ckpt
+python syntheticScriptsAndDocs/predict.py --checkpoint ../checkpoints/0916_training_1_syntehtic_11g_epoch_029.ckpt
 ```
 
 It can predict multiple pointclouds for one checkpoint at once.

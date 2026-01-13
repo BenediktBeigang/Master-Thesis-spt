@@ -5,6 +5,7 @@ PROJECT_NAME=spt_cuda128_26
 PYTHON=3.9
 TORCH=2.7.0
 CUDA_SUPPORTED=(12.8)
+NUMPY=1.26.4
 
 # Check if torchsparse should be installed
 INSTALL_TORCHSPARSE=false
@@ -83,6 +84,25 @@ conda create --name ${PROJECT_NAME} python=${PYTHON} -y
 # Activate the env
 source ${CONDA_DIR}/etc/profile.d/conda.sh  
 conda activate ${PROJECT_NAME}
+
+echo
+echo
+echo "⭐ Pinning build/runtime basics (pip/setuptools/numpy) with constraints"
+echo
+
+CONSTRAINTS_FILE="$HERE/constraints_${PROJECT_NAME}.txt"
+cat > "$CONSTRAINTS_FILE" <<EOF
+numpy==${NUMPY}
+setuptools<81
+EOF
+
+# Make every subsequent pip install obey the constraints automatically
+export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+
+python -m pip install -U pip
+python -m pip install -U wheel "setuptools<81"
+python -m pip install -U "numpy==${NUMPY}"
+python -c "import numpy; print('Pinned numpy:', numpy.__version__)"
 
 echo
 echo
@@ -165,3 +185,9 @@ fi
 echo
 echo
 echo "🚀 Successfully installed SPT"
+
+echo
+echo "⭐ Verifying environment consistency"
+python -m pip check || true
+python -c "import numpy; print('Final numpy:', numpy.__version__)"
+python -c "import pycut_pursuit; print('pycut_pursuit import OK')" || true

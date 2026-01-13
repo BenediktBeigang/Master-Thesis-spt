@@ -26,22 +26,24 @@ log = logging.getLogger(__name__)
 # solve this:
 # https://stackoverflow.com/questions/73125231/pytorch-dataloaders-bad-file-descriptor-and-eof-for-workers0
 import torch.multiprocessing
-torch.multiprocessing.set_sharing_strategy('file_system')
+
+torch.multiprocessing.set_sharing_strategy("file_system")
 
 
-__all__ = ['Synthetic']
+__all__ = ["Synthetic"]
 
 
 ########################################################################
 #                                 Utils                                #
 ########################################################################
 
+
 def read_synthetic(
-        filepath: str,
-        xyz: bool = True,
-        rgb: bool = True,
-        semantic: bool = True,
-        remap: bool = False
+    filepath: str,
+    xyz: bool = True,
+    rgb: bool = True,
+    semantic: bool = True,
+    remap: bool = False,
 ) -> Data:
     """Read a synthetic pointcloud saved as LAS.
 
@@ -60,14 +62,17 @@ def read_synthetic(
     """
     data = Data()
     print("Reading synthetic tile from", filepath)
-    
+
     las = laspy.read(filepath)
-    
+
     if xyz:
-        pos = torch.stack([
-            torch.tensor(las[axis].copy(), dtype=torch.float32)
-            for axis in ["X", "Y", "Z"]
-        ], dim=-1)
+        pos = torch.stack(
+            [
+                torch.tensor(las[axis].copy(), dtype=torch.float32)
+                for axis in ["X", "Y", "Z"]
+            ],
+            dim=-1,
+        )
         pos *= las.header.scale  # LAS scale anwenden
         pos_offset = pos[0]
         data.pos = (pos - pos_offset).float()
@@ -75,21 +80,28 @@ def read_synthetic(
 
     if rgb:
         # RGB in LAS ist typischerweise uint16 in [0, 65535]
-        data.rgb = to_float_rgb(torch.stack([
-            torch.FloatTensor(las[axis].astype('float32') / 65535)
-            for axis in ["red", "green", "blue"]], dim=-1))
+        data.rgb = to_float_rgb(
+            torch.stack(
+                [
+                    torch.FloatTensor(las[axis].astype("float32") / 65535)
+                    for axis in ["red", "green", "blue"]
+                ],
+                dim=-1,
+            )
+        )
 
     if semantic:
         # Anpassen je nach deinem LAS-Attribut für Labels
-        y = torch.from_numpy(las['point_source_id'].astype('int64'))
+        y = torch.from_numpy(las["point_source_id"].astype("int64"))
         data.y = torch.from_numpy(ID2TRAINID)[y] if remap else y
 
     return data
 
 
 ########################################################################
-#                               KITTI360                               #
+#                               Synthetic                              #
 ########################################################################
+
 
 class Synthetic(BaseDataset):
     """Synthetic dataset.
@@ -172,12 +184,12 @@ class Synthetic(BaseDataset):
         return TILES
 
     def download_dataset(self) -> None:
-        """Download the Synthetic dataset.
-        """
-        log.info("The synthetic dataset does not support automatic download. You have to place the dataset by hand.\n")
-        
+        """Download the Synthetic dataset."""
+        log.info(
+            "The synthetic dataset does not support automatic download. You have to place the dataset by hand.\n"
+        )
 
-    def read_single_raw_cloud(self, raw_cloud_path: str) -> 'Data':
+    def read_single_raw_cloud(self, raw_cloud_path: str) -> "Data":
         """Read a single raw cloud and return a `Data` object, ready to
         be passed to `self.pre_transform`.
 
@@ -194,7 +206,9 @@ class Synthetic(BaseDataset):
         while `y < 0` AND `y >= self.num_classes` ARE VOID LABELS.
         This applies to both `Data.y` and `Data.obj.y`.
         """
-        return read_synthetic(raw_cloud_path, xyz=True, rgb=True, semantic=True, remap=True)
+        return read_synthetic(
+            raw_cloud_path, xyz=True, rgb=True, semantic=True, remap=True
+        )
 
     @property
     def raw_file_structure(self) -> str:
@@ -206,19 +220,16 @@ class Synthetic(BaseDataset):
 
     def id_to_relative_raw_path(self, id: str) -> str:
         """All files are directly in the raw/ folder"""
-        return self.id_to_base_id(id) + '.las'
+        return self.id_to_base_id(id) + ".las"
 
-    
     def processed_to_raw_path(self, processed_path: str) -> str:
         """Return the raw cloud path corresponding to the input processed path."""
         # Extract cloud_id from processed path
-        stage, hash_dir, cloud_id = \
-            osp.splitext(processed_path)[0].split(os.sep)[-3:]
-        
+        stage, hash_dir, cloud_id = osp.splitext(processed_path)[0].split(os.sep)[-3:]
+
         # Remove tiling from cloud_id if any
         base_cloud_id = self.id_to_base_id(cloud_id)
-        
-        # Alle raw files sind direkt im raw_dir
-        raw_path = osp.join(self.raw_dir, base_cloud_id + '.las')
-        return raw_path
 
+        # Alle raw files sind direkt im raw_dir
+        raw_path = osp.join(self.raw_dir, base_cloud_id + ".las")
+        return raw_path
