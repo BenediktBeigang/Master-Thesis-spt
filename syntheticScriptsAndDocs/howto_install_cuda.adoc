@@ -1,0 +1,97 @@
+:toc: left
+== SPT Setup
+
+=== NVIDIA Toolkit, C++ Compiler and CUDA
+
+.Local CUDA-Installation
+[source, bash]
+----
+nvidia-smi                    # Supported version
+nvcc --version                # Active version
+ls /usr/local/ | grep cuda    # All installed CUDA versions
+----
+
+.Download `.run` for CUDA 12.1 and Ubuntu 22.04 
+=> link:https://developer.nvidia.com/cuda-toolkit-archive[CUDA Toolkit] (Tested for Linux => x86_64 => Ubuntu => 22.04 => runfile (local))
+
+C\++ Compiler und CUDA have to be **compatible**. The project was testet with CUDA 12.1 and gcc/g++ 11. 
+
+==== C++ Compiler (Build-Essentials)
+[source, bash]
+----
+sudo apt install build-essential
+sudo apt -y install gcc-11 g++-11
+----
+
+.Manage version (higher priority is used automaticly)
+[source, bash]
+----
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1
+sudo update-alternatives --config gcc
+sudo update-alternatives --config g++
+----
+
+.Check version
+[source, bash]
+----
+gcc --version
+g++ --version
+----
+
+==== CUDA Toolkit
+
+WARNING: Like said before, if you use a Blackwell GPU or newer, use CUDA 12.8! The following instructions are for CUDA 12.1!
+
+CUDA 12.1 als `.run`-Datei downloaden: link:https://developer.nvidia.com/cuda-toolkit-archive[CUDA Toolkit Archive]
+
+.Make executable:
+[source, bash]
+----
+chmod +x <name of runfile .run>
+----
+
+.Insall only the Toolkit (without driver):
+[source, bash]
+----
+sudo ./<name of runfile .run> --silent --toolkit
+----
+
+.Configure PATH:
+[source, bash]
+----
+gedit ~/.bashrc
+
+# insert the following:
+export PATH="/usr/local/cuda-12.1/bin:$PATH"
+export LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
+
+# Save file and reload terminal:
+source ~/.bashrc 
+----
+
+=== Conda
+
+.Install Conda
+[source, bash]
+----
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod +x Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh -b -p ~/miniconda3
+source ~/.bashrc
+----
+
+.Configure PATH
+[source, bash]
+----
+ls ~/miniconda3/bin/conda
+echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+----
+
+.Install Conda
+[source, bash]
+----
+conda init
+conda --version
+----

@@ -1,0 +1,169 @@
+== Superpoint Transformer for synthetic data
+
+This is a shorter version of the explanation found in README.adoc, specifically tailored for synthetic data experiments. For a comprehensive understanding, please refer to the main README.md file.
+Note that this is NOT a fork, so they might be new features in the original repository, that can break things here.
+
+ifdef::env-github[]
+[source,mermaid]
+endif::[]
+ifndef::env-github[]
+[mermaid]
+endif::[]
+----
+flowchart LR
+  B[Blender] 
+  CL[Pointcloud cleanup] --> PT[Pre-Transform] --> T[Training]
+  R[Real pointclouds] --> P[predict.py] 
+  X[Pipe extraction]
+  
+  B --Generated pointclouds (.las)--> CL
+  T --Checkpoint (.ckpt)--> P
+  P --Semantically segmented pointclouds (.las)--> X
+
+  classDef external stroke-dasharray: 10 5
+  class B,X external
+----
+
+=== Relevant files for synthetic data
+
+Below is an cutted and advanced overview of the most relevant files and folders for working with synthetic data experiments.
+Places that are visited or modified between trainings are marked with "👉".
+
+.Project Structure:
+```
+└── superpoint_transformer
+    │
+    ├── configs                   # Hydra configs (copied and changed from KITTI-360)
+    │   ├── datamodule                # Data configs
+    │   │   └── semantic                  # Semantic segmentation experiments
+    │   │       ├── synthetic_default.yaml    # Default parameters 
+    │   │       └── 👉synthetic.yaml          # Parameters for creation of superpoint-partition
+    │   │
+    │   └── experiment                # Experiment configs
+    │       └── semantic                  # Semantic segmentation experiments
+    │           └── 👉synthetic_11g.yaml      # Config to train on synthetic data with limited VRAM
+    │
+    ├── 👉data                    # Project data (see docs/datasets.md)
+    │   ├── real                      # Real data to test on (`.las`)
+    │   └── synthetic                 # Synthetic dataset for training
+    │       ├── processed                 # Ready for training data after superpoint-partition (`.h5`)
+    │       └── raw                       # Raw synthetic data files (`.las`)
+    │
+    ├── docs                      # Documentation
+    ├── 👉logs                    # Logs generated (contains models as `.ckpt`-files)
+    ├── notebooks                 # Jupyter notebooks for learning and experimentation
+    │
+    ├── src                       # Source code
+    │   ├── data                      # Data structure for hierarchical partitions
+    │   ├── datamodules               # Lightning DataModules
+    │   │   └── synthetic.py              # Boilerplate code to load synthetic data
+    │   │
+    │   ├── datasets                  # Datasets
+    |   │   ├── __init__.py               # Auto import of synthetic files 
+    │   │   ├── 👉synthetic_config.py     # Synthetic data to train on, attribut mapping
+    │   │   └── 👉synthetic.py            # Implementation to load synthetic data
+    │   │
+    │   └── train.py                  # Run training
+    │
+    ├── syntheticScriptsAndDocs   # Scripts and docs for synthetic data processing
+    │   ├── 👉howto_install_cuda.adoc # Setup documentation for Superpoint Transformer
+    │   ├── 👉pc_cleanup.py           # Cleans generated pointclouds
+    │   └── 👉predict.py              # Predicts for a given checkpoint one ore more pointclouds
+    │
+    ├── install.sh                # Installation script
+    ├── install_cuda128_torch270_py39.sh # Installation script for Blackwell GPUs
+    ├── README_Synthetic.adoc     # You are here
+    └── README.md
+```
+
+=== Usage
+
+==== Environment setup
+
+1. Project was tested on `Ubuntu` 24.04.2 LTS (use it if you want to minimize compatibility issues).
+2. Install CUDA and set the default version. Get help from the file link:/syntheticScriptsAndDocs/howto_install_cuda.adoc[howto_install_cuda.adoc].
+    a. GPUs before Blackwell can use CUDA `12.1` or `11.8`
+    b. Blackwell-GPUs (like RTX 5060-TI) and above need CUDA `12.8`
+3. Install `miniconda` (or `micromamba`).
+4. Use the installation script to install all dependencies as `conda` environment.
+    a. For GPUs before Blackwell use link:install.sh[install.sh]
+    b. For Blackwell-GPUs and above use link:install_cuda128_torch270_py39.sh[install_cuda128_torch270_py39.sh]
+5. Install `PDAL` with conda as own environment: `conda create --yes --name pdal --channel conda-forge pdal`
+
+==== Data preperation
+
+Put all your generated `.las`-files in `/data/synthetic/raw/`.
+The following pattern for naming was used and should match your data:
+
+* => `<seed>_<year><month><day><HH><MM>_frames_1_to_<frames>_noise_parts.las`
+* => Example: `700_202509022301_frames_1_to_1059_noise_parts.las`
+
+The point clouds generated by Blender are "raw" and should be post-processed.
+Calibration points float in the air, there is no clean sampling to enforce a minimum point spacing (0.02m) yet, and the result is uncompressed `.las` files (in contrast to `.laz`, which are suitable for storage in Nextcloud).
+The link:https://pdal.org/[PDAL] script link:syntheticScriptsAndDocs/pc_cleanup.py[pc_cleanup.py] cleans up and compresses the files.
+PDAL itself can be installed most easily via link:https://www.anaconda.com/docs/getting-started/miniconda/install[Conda] or link:https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html[Mamba]:
+
+.Use PDAL with Conda and cleanup the generated pointclouds
+[source, bash]
+----
+conda activate pdal
+
+# Adjust paths in pc_cleanup.py as needed, then run:
+python pc_cleanup.py
+----
+
+For training, `.laz` files are currently not supported directly.
+You need to convert them to `.las` files yourself using PDAL.
+
+
+WARNING: the default path **OVERWRITES** all pointcloud files, so change the path for your needs!
+
+Now go to the link:src/datasets/synthetic_config.py[synthetic_config.py] file and add all your data you want to train with in the `TILES` array (only the name of the file and without `.las` postfix).
+You should use 20% of your data in the `val` part of the array for validation.
+
+==== Training
+
+You can use the config files listed above to adjust parameters or use the already existing ones.
+The number of epochs decides how long the training should run and can be set in link:configs/experiment/semantic/synthetic_11g.yaml[synthetic_11g.yaml] with the attribut (`max_epochs`).
+Use the following command to start training:
+
+```bash
+conda deactivate
+
+conda activate spt
+# or for blackwell gpus
+conda activate spt_cuda128
+
+python src/train.py experiment=semantic/synthetic_11g
+# or continue training from a checkpoint
+python src/train.py experiment=semantic/synthetic_11g ckpt_path=./logs/train/runs/<your run>/checkpoints/last.ckpt
+```
+
+On the first training the hirachical superpoint-partition will be created automatically in the `/data/synthetic/processed/` folder.
+The best and last trained model will be saved in:
+
+=> `/logs/train/runs/<your run>/checkpoints/epoch_<best epoch>`.
+
+An own naming scheme was introduced to keep track of different trainings.
+For example `epoch_029.ckpt` was changed to `0916_training_1_syntehtic_11g_epoch_029.ckpt` where: +
+`0916`: is the date (16th September) +
+`training_1`: is the training number of that day +
+`syntehtic_11g`: is the config used for training
+
+==== Prediction on synthetic and real data
+
+For convienent prediction on real data the link:syntheticScriptsAndDocs/predict.py[predict.py] script can be used.
+It automatically runs the pretransform, loads the model from the checkpoint and infers the pointcloud.
+
+```bash
+python syntheticScriptsAndDocs/predict.py --checkpoint ../checkpoints/0916_training_1_syntehtic_11g_epoch_029.ckpt
+```
+
+It can predict multiple pointclouds for one checkpoint at once.
+For that list all filepaths in the link:syntheticScriptsAndDocs/predict.py[predict.py] script.
+
+In the same folder as the orginal pointcloud the predicted pointcloud will be saved with the following naming scheme:
+
+* => `<orginal name>_predicted_<date>_t<training of the day>.las` +
+* => Example: `700_202509022301_frames_1_to_1059_noise_parts_predicted_0916_t1.las`
+

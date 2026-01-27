@@ -32,7 +32,7 @@ partition_hf:
 
 # point features used for training
 point_hf:
-  - "hsv"
+  - "hsv" # color feature deactivated on 0925
   - "linearity"
   - "planarity"
   - "scattering"
