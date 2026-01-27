@@ -1059,6 +1059,9 @@ class SemanticSegmentationModule(LightningModule):
         for easier use: no need to explicitly pass `model.net`,
         `model.criterion`, etc.
         """
+        if "weights_only" not in kwargs:
+            kwargs["weights_only"] = False
+
         return self.__class__.load_from_checkpoint(
             checkpoint_path, net=self.net, criterion=self.criterion, **kwargs)
 

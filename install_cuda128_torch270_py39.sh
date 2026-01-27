@@ -5,6 +5,18 @@ PROJECT_NAME=spt_cuda128
 PYTHON=3.9
 TORCH=2.7.0
 CUDA_SUPPORTED=(12.8)
+NUMPY=1.26.4
+
+# Check if torchsparse should be installed
+INSTALL_TORCHSPARSE=false
+if [[ "$1" == "with_torchsparse" ]]; then
+    INSTALL_TORCHSPARSE=true
+elif [[ -n "$1" ]]; then
+    echo "Unknown argument: $1"
+    echo "Usage: ./install.sh [with_torchsparse]"
+    echo "  with_torchsparse: Install TorchSparse (optional dependency)"
+    exit 1
+fi
 
 
 # Recover the project's directory from the position of the install.sh
@@ -75,6 +87,25 @@ conda activate ${PROJECT_NAME}
 
 echo
 echo
+echo "⭐ Pinning build/runtime basics (pip/setuptools/numpy) with constraints"
+echo
+
+CONSTRAINTS_FILE="$HERE/constraints_${PROJECT_NAME}.txt"
+cat > "$CONSTRAINTS_FILE" <<EOF
+numpy==${NUMPY}
+setuptools<81
+EOF
+
+# Make every subsequent pip install obey the constraints automatically
+export PIP_CONSTRAINT="$CONSTRAINTS_FILE"
+
+python -m pip install -U pip
+python -m pip install -U wheel "setuptools<81"
+python -m pip install -U "numpy==${NUMPY}"
+python -c "import numpy; print('Pinned numpy:', numpy.__version__)"
+
+echo
+echo
 echo "⭐ Installing conda and pip dependencies"
 echo
 conda install pip nb_conda_kernels -y
@@ -103,46 +134,61 @@ pip install wandb
 pip install open3d
 pip install gdown
 pip install ipyfilechooser
+pip install torch-ransac3d
+pip install pgeof
+pip install pycut-pursuit
+pip install pygrid-graph
+pip install torch-graph-components
 pip install laspy
 
 echo
 echo
 echo "⭐ Installing FRNN"
 echo
-git clone --recursive https://github.com/lxxue/FRNN.git src/dependencies/FRNN
 
-# install a prefix_sum routine first
-cd src/dependencies/FRNN/external/prefix_sum
-python setup.py install
+FRNN_DIR="src/dependencies/FRNN"
+
+# 1) clone or update (idempotent)
+if [ -d "$FRNN_DIR/.git" ]; then
+  echo "FRNN already exists -> updating"
+  git -C "$FRNN_DIR" pull
+  git -C "$FRNN_DIR" submodule update --init --recursive
+else
+  rm -rf "$FRNN_DIR"
+  git clone --recursive https://github.com/lxxue/FRNN.git "$FRNN_DIR"
+fi
+
+# 2) build/install with torch available (disable build isolation)
+python -c "import torch; print('Torch:', torch.__version__); print('CUDA:', torch.cuda.is_available())"
+
+# install prefix_sum first
+pip install --no-build-isolation -v "$FRNN_DIR/external/prefix_sum"
 
 # install FRNN
-cd ../../ # back to the {FRNN} directory
-python setup.py install
-cd ../../../
+pip install --no-build-isolation -v "$FRNN_DIR"
 
-echo
-echo
-echo "⭐ Installing Point Geometric Features"
-echo
-# Install libstdcxx-ng in the conda environment, to make sure pgeof
-# finds its dependencies:
-# https://github.com/drprojects/superpoint_transformer/issues/102
-# This is a linux-only fix:
-# https://stackoverflow.com/a/68845839
-conda install -c conda-forge libstdcxx-ng
-pip install git+https://github.com/drprojects/point_geometric_features.git
+# install TorchSparse (optional)
+if [[ "$INSTALL_TORCHSPARSE" == true ]]; then
+    echo
+    echo
+    echo "⭐ Installing TorchSparse"
+    echo
+    git clone https://github.com/mit-han-lab/torchsparse.git src/dependencies/torchsparse
+    pip install backports.cached-property
+    pip install rootpath
+    conda install -y google-sparsehash -c bioconda
+    cd src/dependencies/torchsparse
+    pip install .
+    cd ../../../
+fi
 
-echo
-echo
-echo "⭐ Installing Parallel Cut-Pursuit"
-echo
-# Clone parallel-cut-pursuit and grid-graph repos
-git clone https://gitlab.com/1a7r0ch3/parallel-cut-pursuit.git src/dependencies/parallel_cut_pursuit
-git clone https://gitlab.com/1a7r0ch3/grid-graph.git src/dependencies/grid_graph
-
-# Compile the projects
-python scripts/setup_dependencies.py build_ext
-
+# let user know
 echo
 echo
 echo "🚀 Successfully installed SPT"
+
+echo
+echo "⭐ Verifying environment consistency"
+python -m pip check || true
+python -c "import numpy; print('Final numpy:', numpy.__version__)"
+python -c "import pycut_pursuit; print('pycut_pursuit import OK')" || true
