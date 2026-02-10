@@ -1,0 +1,50 @@
+= Training vom 25. September 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 5
+| `sample_graph_k` | 2
+| Epochs | 35
+| Checkpoint | `0925_training_1_synthetic_11g_epoch_029.ckpt`
+| Dataset (Seeds) | 0700 - 0799
+|===
+
+.Anmerkungen
+****
+Das Training wurde ohne HSV-Werte durchgeführt, um den Einfluss der Farben zu untersuchen.
+****
+
+=== Ergebnisse
+
+
+|===
+|                 epoch | 34
+|          lr-AdamW/pg1 | 0.00011
+| lr-AdamW/pg1-momentum | 0.9
+|          lr-AdamW/pg2 | 1e-05
+| lr-AdamW/pg2-momentum | 0.9
+|    train/iou_armature | 80.72494
+|  train/iou_background | 92.18249
+|      train/iou_ground | 98.21629
+|        train/iou_pipe | 89.343
+|            train/loss | 0.46789
+|            train/macc | 95.06542
+|            train/miou | 90.11668
+|              train/oa | 98.26832
+|   trainer/global_step | 34999
+|      val/iou_armature | 78.36349
+|    val/iou_background | 90.61144
+|        val/iou_ground | 98.21221
+|          val/iou_pipe | 89.27428
+|              val/loss | 0.48408
+|              val/macc | 94.54604
+|         val/macc_best | 94.54604
+|              val/miou | 89.11536
+|         val/miou_best | 89.11536
+|                val/oa | 98.23194
+|           val/oa_best | 98.23194
+|===

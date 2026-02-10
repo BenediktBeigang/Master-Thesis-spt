@@ -1,0 +1,66 @@
+= Training vom 28. Juli 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 5
+| `sample_graph_k` | 2
+| Epochs | 25
+| Checkpoint | `0728_training_1_synthetic_11g_epoch_019.ckpt`
+| Dataset (Seeds) | 0200 - 0299
+|===
+
+.Anmerkungen
+****
+Dieses Training wurde auf einem neuen angepassten Datensatz (v2) durchgeführt:
+
+* Die Armaturen wurden besser modeliert um näher an der Realität zu sein.
+* Es gibt nun Background-Objekte, darunter zählen
+** Buildings
+** undefined-Cubes
+** Decoy-Armatures.
+* Manche Pipes haben eine gerade Kante/Ebene nach unten zum Boden um diese Art von Artefakten die in der Realität vorkommen mit zu berücksichtigen. 
+****
+
+=== Ergebnisse
+
+* `pre_transform` in 20m
+* `train` in 1h
+* Die Ergebnisse sind sehr schlecht geworden, Pipes werden sehr unzuverlässig erkannt.
+* Die falsch-positiven konnten nicht reduziert werden.
+* Eventuell braucht es mehr Epochs um die neuen Klassen zu lernen.
+* Der nächste Versuch wird versuchen weniger Klassen zu verwenden, bzw wieder nur versuchen die Pipes zu erkennen.
+
+|===
+|                 epoch | 24
+|          lr-AdamW/pg1 | 0.00096
+| lr-AdamW/pg1-momentum | 0.9
+|          lr-AdamW/pg2 | 0.0001
+| lr-AdamW/pg2-momentum | 0.9
+|     train/iou_adapter | 35.18336
+|    train/iou_armature | 84.04774
+|      train/iou_corner | 42.0409
+|      train/iou_ground | 99.93907
+|        train/iou_pipe | 91.84776
+|            train/loss | 0.11308
+|            train/macc | 84.08821
+|            train/miou | 70.61177
+|              train/oa | 99.63171
+|   trainer/global_step | 24999
+|       val/iou_adapter | 23.91724
+|      val/iou_armature | 72.50557
+|        val/iou_corner | 30.67086
+|        val/iou_ground | 99.82899
+|          val/iou_pipe | 88.50182
+|              val/loss | 0.18443
+|              val/macc | 78.97046
+|         val/macc_best | 78.97046
+|              val/miou | 63.0849
+|         val/miou_best | 63.0849
+|                val/oa | 99.43761
+|           val/oa_best | 99.43761
+|===
+

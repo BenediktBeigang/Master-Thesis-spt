@@ -1,0 +1,52 @@
+= Training vom 23. September 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 5
+| `sample_graph_k` | 2
+| Epochs | 35-70
+| Checkpoint | `0923_training_1_synthetic_11g_epoch_069.ckpt`
+| Dataset (Seeds) | 0700 - 0899
+|===
+
+.Anmerkungen
+****
+Das Training vom 16. September 2025 wurde fortgesetzt und auf 70 Epochen erweitert.
+****
+
+=== Ergebnisse
+
+Verbesserungen beim Armaturen-Recall, aber Verschlechterung der Precision.
+
+|===
+|                 epoch | 69
+|          lr-AdamW/pg1 | 0.00166
+| lr-AdamW/pg1-momentum | 0.9
+|          lr-AdamW/pg2 | 0.00017
+| lr-AdamW/pg2-momentum | 0.9
+|    train/iou_armature | 84.67017
+|  train/iou_background | 96.14658
+|      train/iou_ground | 99.30907
+|        train/iou_pipe | 95.23086
+|            train/loss | 0.25999
+|            train/macc | 96.72031
+|            train/miou | 93.83916
+|              train/oa | 99.23407
+|   trainer/global_step | 139999
+|      val/iou_armature | 84.61131
+|    val/iou_background | 95.89501
+|        val/iou_ground | 99.27054
+|          val/iou_pipe | 95.05093
+|              val/loss | 0.26107
+|              val/macc | 96.46796
+|         val/macc_best | 96.61397
+|              val/miou | 93.70695
+|         val/miou_best | 93.70695
+|                val/oa | 99.20656
+|           val/oa_best | 99.20656
+|===
+

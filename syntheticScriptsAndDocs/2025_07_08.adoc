@@ -1,0 +1,19 @@
+= Training vom 07. Juli 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 5
+| `sample_graph_k` | 2
+| Epochs | 300
+| Checkpoint | `0708_training_1_synthetic_11g_epoch_069.ckpt`
+| Dataset (Seeds) | 10-64, 100-110
+|===
+
+=== Ergebnisse
+
+Das Training konnte nicht abgeschlossen werden und ist abgestürzt nach einer unbekannten Anzahl von Epochs.
+Der letzte beste checkpoint war Epoch 69, welcher vergleichbare Ergebnisse geliefert hat wie das 0701_2.

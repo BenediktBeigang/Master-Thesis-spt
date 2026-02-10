@@ -1,0 +1,21 @@
+= Training vom 07. Juli 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 2
+| `sample_graph_k` | 2
+| Epochs | 200
+| Checkpoint | `0707_training_1_synthetic_11g_epoch_189.ckpt`
+| Dataset (Seeds) | 10-64, 100-110
+|===
+
+=== Ergebnisse
+
+Die Ergebnisse haben sich verschlechtert. 
+Ground wird gut erkannt, aber besonders Corner und Adapter werden nicht richtig erkannt und falsch positiv als Pipe erkannt.
+Meine Hypothese ist, dass die Vergrößerung der Tiles dem Modell das Erkennen von Strukturen innerhalb der Wolke erschweren.
+Jedoch ist nicht auszuschließen, dass eine angepasste `config` dieses Problem lösen könnte.

@@ -1,0 +1,50 @@
+= Training vom 19. August 2025
+
+== Training 1
+[NOTE]
+|===
+| GPU | RTX 5060 Ti
+| Config | 11g
+| Id | Synthetic mapping
+| `xy_tiling` | 5
+| `sample_graph_k` | 2
+| Epochs | 70
+| Checkpoint | `0819_training_1_synthetic_11g_epoch_069.ckpt`
+| Dataset (Seeds) | 0300 - 0399
+|===
+
+
+=== Ergebnisse
+
+* `train` in 3h
+
+Kleine Verbesserungen bei der der Erkennung von Armaturen.
+
+|===
+|                 epoch | 69
+|          lr-AdamW/pg1 | 1e-05
+| lr-AdamW/pg1-momentum | 0.9
+|          lr-AdamW/pg2 | 0.0
+| lr-AdamW/pg2-momentum | 0.9
+|    train/iou_armature | 83.50676
+|  train/iou_background | 96.56313
+|      train/iou_ground | 99.42406
+|        train/iou_pipe | 94.9649
+|            train/loss | 0.15704
+|            train/macc | 96.92936
+|            train/miou | 93.61472
+|              train/oa | 99.40369
+|   trainer/global_step | 69999
+|      val/iou_armature | 84.04132
+|    val/iou_background | 96.66711
+|        val/iou_ground | 99.54768
+|          val/iou_pipe | 96.65569
+|              val/loss | 0.13847
+|              val/macc | 97.19926
+|         val/macc_best | 97.29874
+|              val/miou | 94.22795
+|         val/miou_best | 94.22795
+|                val/oa | 99.51202
+|           val/oa_best | 99.51379
+|===
+
