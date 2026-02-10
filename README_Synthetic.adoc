@@ -77,9 +77,7 @@ Places that are visited or modified between trainings are marked with "👉".
     └── README.md
 ```
 
-=== Usage
-
-==== Environment setup
+=== Environment setup
 
 1. Project was tested on `Ubuntu` 24.04.2 LTS (use it if you want to minimize compatibility issues).
 2. Install CUDA and set the default version. Get help from the file link:/syntheticScriptsAndDocs/howto_install_cuda.adoc[howto_install_cuda.adoc].
@@ -91,7 +89,7 @@ Places that are visited or modified between trainings are marked with "👉".
     b. For Blackwell-GPUs and above use link:install_cuda128_torch270_py39.sh[install_cuda128_torch270_py39.sh]
 5. Install `PDAL` with conda as own environment: `conda create --yes --name pdal --channel conda-forge pdal`
 
-==== Data preperation
+=== Data preperation
 
 Put all your generated `.las`-files in `/data/synthetic/raw/`.
 The following pattern for naming was used and should match your data:
@@ -122,7 +120,7 @@ WARNING: the default path **OVERWRITES** all pointcloud files, so change the pat
 Now go to the link:src/datasets/synthetic_config.py[synthetic_config.py] file and add all your data you want to train with in the `TILES` array (only the name of the file and without `.las` postfix).
 You should use 20% of your data in the `val` part of the array for validation.
 
-==== Training
+=== Training
 
 You can use the config files listed above to adjust parameters or use the already existing ones.
 The number of epochs decides how long the training should run and can be set in link:configs/experiment/semantic/synthetic_11g.yaml[synthetic_11g.yaml] with the attribut (`max_epochs`).
@@ -151,7 +149,7 @@ For example `epoch_029.ckpt` was changed to `0916_training_1_syntehtic_11g_epoch
 `training_1`: is the training number of that day +
 `syntehtic_11g`: is the config used for training
 
-==== Prediction on synthetic and real data
+=== Prediction on synthetic and real data
 
 For convienent prediction on real data the link:syntheticScriptsAndDocs/predict.py[predict.py] script can be used.
 It automatically runs the pretransform, loads the model from the checkpoint and infers the pointcloud.
@@ -168,3 +166,21 @@ In the same folder as the orginal pointcloud the predicted pointcloud will be sa
 * => `<orginal name>_predicted_<date>_t<training of the day>.las` +
 * => Example: `700_202509022301_frames_1_to_1059_noise_parts_predicted_0916_t1.las`
 
+=== Docker images
+
+For easier setup and reproducibility, Dockerfiles/images are provided.
+In order to use them Nvidia Container Toolkit needs to be installed on the system, which can be done by following the instructions in link:syntheticScriptsAndDocs/howto_install_docker_nvidia_container_toolkit.adoc[howto_install_docker_nvidia_container_toolkit.adoc].
+The provided Dockerfiles are compiled for an CUDA 12.8 environment and a RTX A6000 (Ampere) or RTX 5060 Ti (Blackwell) in mind.
+For other GPUs change the `TORCH_CUDA_ARCH_LIST` argument in the Dockerfiles accordingly. 
+
+[source, bash]
+----
+sudo docker build -t spt-cuda128:pytorch -f Dockerfile.pytorch . # (~14 GB)
+# or
+sudo docker build -t spt-cuda128:cuda -f Dockerfile.cuda . # (~20 GB)
+
+docker run --gpus all --name spt -it -d --rm -v /gds:/gds spt-cuda128:pytorch
+docker run exec -it spt /bin/bash
+
+
+----
