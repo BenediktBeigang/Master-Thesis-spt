@@ -182,5 +182,7 @@ sudo docker build -t spt-cuda128:cuda -f Dockerfile.cuda . # (~20 GB)
 docker run --gpus all --name spt -it -d --rm -v /gds:/gds spt-cuda128:pytorch
 docker run exec -it spt /bin/bash
 
-
+/opt/spt$ python predict.py -f /gds/<your_file>.las -c /gds/checkpoints/<your_checkpoint>.ckpt [-o <path to output file>.las]
 ----
+
+If no output path is provided, the `.las` file will be overwritten, with the additional las-attribute `classification` containing the predicted semantic labels.
