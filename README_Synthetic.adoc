@@ -67,7 +67,7 @@ Places that are visited or modified between trainings are marked with "👉".
     │
     ├── syntheticScriptsAndDocs   # Scripts and docs for synthetic data processing
     │   ├── 2025_0x_xx.adoc           # Training result summaries
-    │   ├── 👉howto_install_cuda.adoc # Setup documentation for Superpoint Transformer
+    │   ├── howto_install_cuda.adoc   # Setup documentation for Superpoint Transformer
     │   ├── 👉pc_cleanup.py           # Cleans generated pointclouds
     │   └── 👉predict.py              # Predicts for a given checkpoint one ore more pointclouds
     │
